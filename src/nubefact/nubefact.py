@@ -150,7 +150,7 @@ class NubeFactPSE:
             for tributo in detalle.tributos:
                 if descuento>0.0 and tributo.procentaje>0.0 and tributo.ideTributo != '7152':
                     vals['precio_unitario'] = round(vals['valor_unitario']*(1+tributo.procentaje/100), 10)
-                elif tributo.ideTributo != '7152':
+                elif tributo.ideTributo == '7152':
                     vals['precio_unitario'] = round(vals['valor_unitario']+tributo.montoTributo, 10)
             vals['descuento'] = descuento
             vals['subtotal'] = detalle.mtoValorUnitario*detalle.cantidad - descuento      
@@ -207,7 +207,7 @@ class NubeFactPSE:
         if ref and re.match(r'^[a-zA-Z0-9]*$', ref):
             vals['orden_compra_servicio'] = self.documento.referencia
         vals['tabla_personalizada_codigo'] = ''
-        vals['formato_de_pdf'] = ''
+        vals['formato_de_pdf'] = 'A4'
         vals['percepcion_tipo'] = ''
         vals['percepcion_base_imponible'] = ''
         vals['total_percepcion'] = ''
@@ -270,7 +270,7 @@ class NubeFactPSE:
             item = {}
             item['unidad_de_medida'] = detalle.codUnidadMedida
             item['codigo'] = detalle.codUnidadMedida
-            item['descripcion'] = detalle.codUnidadMedida
+            item['descripcion'] = detalle.descripcion
             item['cantidad'] = detalle.cantidad
             items.append(item)
         vals['items'] = items
