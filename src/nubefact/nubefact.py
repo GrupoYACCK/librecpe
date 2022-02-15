@@ -213,6 +213,7 @@ class NubeFactPSE:
         vals['total_percepcion'] = ''
         vals['total_incluido_percepcion'] = ''
         vals['detraccion'] = False
+        vals['tipo_de_cambio'] = self.documento.tipoDeCambio
         vals.update(self._getCliente())
         if self.documento.tipoDocumento in ['07', '08']:
             vals.update(self._getDocumentoModificado())

@@ -12,7 +12,7 @@ class Documento:
     def __init__(self, servidor= None, tipo = None):
         self.servidor = servidor or 'SUNAT' # vals.get('servidor','sunat')
         self.tipo = tipo
-        
+        self.tipoCAmbio = 1
         self.numero = ""
         self.tipoDocumento = ""
             
@@ -138,7 +138,7 @@ class Documento:
                 self.fecEmision = datetime.strptime(vals.get('fecEmision', datetime.now(tz=pytz.timezone('America/Lima')).strftime("%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
             except Exception:
                 raise LibreCpeError("fecEmision", "No esta defenifido o no cumple el formato 'AAA-mm-dd HH:MM:SS'")
-            
+            self.tipoDeCambio = round(vals.get('tipoDeCambio', 1), 3)
             self.fecVencimiento = vals.get('fecVencimiento', '')
             self.tipOperacion = vals.get('tipOperacion', '')
             self.tipMoneda = vals.get('tipMoneda', '')
