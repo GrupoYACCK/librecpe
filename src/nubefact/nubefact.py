@@ -202,10 +202,13 @@ class NubeFactPSE:
         vals['enviar_automaticamente_a_la_sunat']=True
         vals['codigo_unico']=''
         vals['condiciones_de_pago'] = ''
-        vals['medio_de_pago'] = ''
+        if self.documento.medioPago.cuotas:
+            vals['medio_de_pago'] = 'credito'
+        else:
+            vals['medio_de_pago'] = ''
         ref = self.documento.referencia.replace(" ","").replace("-","").replace("/","")
         if ref and re.match(r'^[a-zA-Z0-9]*$', ref):
-            vals['orden_compra_servicio'] = self.documento.referencia
+            vals['orden_compra_servicio'] = ref
         vals['tabla_personalizada_codigo'] = ''
         vals['formato_de_pdf'] = 'A4'
         vals['percepcion_tipo'] = ''
