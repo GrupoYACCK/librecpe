@@ -237,7 +237,12 @@ class NubeFactPSE:
         
         vals.update(self._getCliente())
         vals['fecha_de_emision']= self.documento.fecEmision.strftime("%d-%m-%Y")
-        vals['observaciones']= self.documento.descripcion 
+        observaciones = ""
+        if self.documento.descripcion:
+            observaciones+= self.documento.descripcion 
+        if self.documento.observacion:
+            observaciones+="\n%s" % self.documento.observacion
+        vals['observaciones']= observaciones
         
         vals['motivo_de_traslado']= self.documento.motivo
         vals['peso_bruto_total']= self.documento.pesoBruto
