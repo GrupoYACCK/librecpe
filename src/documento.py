@@ -1,6 +1,6 @@
 from datetime import datetime
 import pytz
-from base64 import encodestring, decodestring
+from base64 import encodebytes, decodebytes
 from .common import Emisor, Adquirente
 from .common import LibreCpeError
 from .cpe import LibreCPE, Soap, Cliente
@@ -214,8 +214,8 @@ class Documento:
                 xml=xml.encode('utf-8')
             xml, xml_firmado = librecpe.getDocumento(key, cer, xml)
             resumen, firma = librecpe.getFirma(xml_firmado)
-            vals['xml'] = encodestring(xml)
-            vals['xml_firmado'] = encodestring(xml_firmado)
+            vals['xml'] = encodebytes(xml)
+            vals['xml_firmado'] = encodebytes(xml_firmado)
             vals['resumen'] = resumen
             vals['firma'] = firma
         return vals
@@ -229,7 +229,7 @@ class Documento:
             soap['url']
         cliente_soap = Soap(**soap)
         cliente = Cliente()
-        xml = decodestring(xml)
+        xml = decodebytes(xml)
         zip, estado_respuesta, respuesta, datos_respuesta = cliente.procesar(document_name=nombre_documento, type=tipo, xml=xml, client=cliente_soap)
         return {'estado': estado_respuesta, 'respuesta':respuesta, 'datos_respuesta': datos_respuesta}
 
