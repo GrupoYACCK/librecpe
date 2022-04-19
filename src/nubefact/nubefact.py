@@ -75,6 +75,45 @@ data = {
     },
     "guia_tipo":{
         "09":"1"
+    },
+    {"detraccion_tipo":{
+        "001":1,
+        "002":2,
+        "003":3,
+        "004":4,
+        "005":5,
+        "007":7,
+        "008":8,
+        "009":9,
+        "010":10,
+        "011":11,
+        "012":12,
+        "014":13,
+        "016":14,
+        "017":15,
+        "019":17,
+        "020":18,
+        "021":19,
+        "022":20,
+        "023":21,
+        "024":22,
+        "025":23,
+        "026":24,
+        "027":25,
+        "028":26,
+        "030":28,
+        "031":29,
+        "032":30,
+        "034":32,
+        "035":33,
+        "036":34,
+        "037":35,
+        "039":37,
+        "040":38,
+        "041":39,
+        "013":40,
+        "015":41,
+        "099":42
     }
 }
 
@@ -186,7 +225,19 @@ class NubeFactPSE:
                 })
             num+=1
         return {'venta_al_credito':res}
-    
+
+    def _getDetraccion(self):
+        vals = {}
+        detraccion = False
+        for leyenda in self.documento.leyendas:
+            if leyenda.codLeyenda == '2006':
+                detraccion = True
+        vals['detraccion'] = detraccion
+        if detraccion:
+            vals['detraccion_tipo'] = 29
+            vals['detraccion_total'] = round(self.documento.totalVenta*0.04,2)
+        return vals
+
     def getDocumento(self):
         vals = {}
         vals['operacion'] = "generar_comprobante"
@@ -215,7 +266,7 @@ class NubeFactPSE:
         vals['percepcion_base_imponible'] = ''
         vals['total_percepcion'] = ''
         vals['total_incluido_percepcion'] = ''
-        vals['detraccion'] = False
+        vals.update(self._getDetraccion())
         vals['tipo_de_cambio'] = self.documento.tipoDeCambio
         vals.update(self._getCliente())
         if self.documento.tipoDocumento in ['07', '08']:
@@ -224,7 +275,6 @@ class NubeFactPSE:
         vals.update(self._getItems())
         vals.update(self._getGuias())
         vals.update(self._getVentaCredito())
-        print(vals)
         return vals
         #data = json.dumps(vals)
     
@@ -278,7 +328,7 @@ class NubeFactPSE:
         for detalle in self.documento.detalles:
             item = {}
             item['unidad_de_medida'] = detalle.codUnidadMedida
-            item['codigo'] = detalle.codUnidadMedida
+            item['codigo'] = detalle.codProducto
             item['descripcion'] = detalle.descripcion
             item['cantidad'] = detalle.cantidad
             items.append(item)
