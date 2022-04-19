@@ -76,7 +76,7 @@ data = {
     "guia_tipo":{
         "09":"1"
     },
-    {"detraccion_tipo":{
+    "detraccion_tipo":{
         "001":1,
         "002":2,
         "003":3,
