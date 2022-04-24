@@ -81,7 +81,7 @@ class Documento:
             
         self.puerto = ''
         self.anticipos = set()
-        
+        self.notas = ''
     
     def validate(self):
         if not self.tributos:
@@ -173,7 +173,7 @@ class Documento:
             self.medioPago = MedioPago(vals.get("medioPago", {})) 
             for anticipo in vals.get('anticipos', []):
                 self.anticipos.add(Anticipo(anticipo)) 
-            
+            self.notas = vals.get("notas")
         elif self.tipoDocumento in ['09']:
             self.observacion = vals.get('observacion')
             self.fecEmision = datetime.strptime(vals.get('fecEmision'),'%Y-%m-%d') # datetime.strptime(vals.get('fecEmision'), datetime.now(tz=pytz.timezone('America/Lima'))).strftime("%Y-%m-%d"), "%Y-%m-%d") 

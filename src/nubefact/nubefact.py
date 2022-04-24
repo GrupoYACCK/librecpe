@@ -249,7 +249,7 @@ class NubeFactPSE:
         vals['fecha_de_vencimiento']= self.documento.fecVencimiento and datetime.strptime(self.documento.fecVencimiento, "%Y-%m-%d").strftime("%d-%m-%Y") or ""
         vals['moneda']= data['moneda'].get(self.documento.tipMoneda,self.documento.tipMoneda) 
         #"tipo_de_cambio": "",
-        vals['observaciones']= self.documento.motivo
+        vals['observaciones']= self.documento.notas
         vals['enviar_automaticamente_a_la_sunat']=True
         vals['codigo_unico']=''
         vals['condiciones_de_pago'] = ''
