@@ -173,34 +173,56 @@ class NubeFactPSE:
         placa = ""
         items=[]
         cont=0
-        for detalle in self.documento.detalles:
+        if not self.documento.detalles:
+            for detalle in self.documento.detalles:
+                vals = {}
+                vals['unidad_de_medida'] = detalle.codUnidadMedida
+                vals['codigo'] = detalle.codProducto
+                vals['codigo_producto_sunat'] = detalle.codProductoSUNAT
+                vals['descripcion'] = detalle.descripcion
+                vals['cantidad'] = detalle.cantidad
+                vals['valor_unitario'] = detalle.mtoValorUnitario
+                vals['precio_unitario'] = detalle.mtoPrecioVentaUnitario
+                descuento = 0.0
+                for desc in detalle.cargoDescuentos:
+                    if desc.indicador == 'false':
+                        descuento+=desc.monto
+                for tributo in detalle.tributos:
+                    if descuento>0.0 and tributo.procentaje>0.0 and tributo.ideTributo != '7152':
+                        vals['precio_unitario'] = round(vals['valor_unitario']*(1+tributo.procentaje/100), 10)
+                    elif tributo.ideTributo == '7152':
+                        vals['precio_unitario'] = round(vals['valor_unitario']+tributo.montoTributo, 10)
+                vals['descuento'] = descuento
+                vals['subtotal'] = detalle.mtoValorUnitario*detalle.cantidad - descuento
+                vals['tipo_de_igv'] = data['tipo_de_igv'].get(detalle.tipAfectacion,detalle.tipAfectacion)
+                vals['igv'] = detalle.sumTotTributosItem
+                vals['total'] = detalle.mtoPrecioVentaUnitario*detalle.cantidad
+                vals['anticipo_regularizacion'] = ''
+                vals['anticipo_documento_serie'] = ''
+                vals['anticipo_documento_numero'] = ''
+                if detalle.placa:
+                    placa = detalle.placa
+                items.append(vals)
+        else:
+            descripcion = []
+            for detalle in self.documento.detalles:
+                descripcion.append("%s %s %s" %(detalle.descripcion, detalle.codUnidadMedida, str(detalle.cantidad)))
             vals = {}
-            vals['unidad_de_medida'] = detalle.codUnidadMedida
-            vals['codigo'] = detalle.codProducto
-            vals['codigo_producto_sunat'] = detalle.codProductoSUNAT
-            vals['descripcion'] = detalle.descripcion
-            vals['cantidad'] = detalle.cantidad
-            vals['valor_unitario'] = detalle.mtoValorUnitario
-            vals['precio_unitario'] = detalle.mtoPrecioVentaUnitario
-            descuento = 0.0
-            for desc in detalle.cargoDescuentos:
-                if desc.indicador == 'false':
-                    descuento+=desc.monto
-            for tributo in detalle.tributos:
-                if descuento>0.0 and tributo.procentaje>0.0 and tributo.ideTributo != '7152':
-                    vals['precio_unitario'] = round(vals['valor_unitario']*(1+tributo.procentaje/100), 10)
-                elif tributo.ideTributo == '7152':
-                    vals['precio_unitario'] = round(vals['valor_unitario']+tributo.montoTributo, 10)
-            vals['descuento'] = descuento
-            vals['subtotal'] = detalle.mtoValorUnitario*detalle.cantidad - descuento
-            vals['tipo_de_igv'] = data['tipo_de_igv'].get(detalle.tipAfectacion,detalle.tipAfectacion)
-            vals['igv'] = detalle.sumTotTributosItem
-            vals['total'] = detalle.mtoPrecioVentaUnitario*detalle.cantidad
+            vals['unidad_de_medida'] = 'NIU'
+            vals['codigo'] = '001'
+            vals['codigo_producto_sunat'] = ''
+            vals['descripcion'] = "REGULARIZACIÓN DEL ANTICIPO\n%s" % "\n".join(descripcion)
+            vals['cantidad'] = 1
+            vals['valor_unitario'] = round(self.documento.totalVenta - self.documento.totalTributos,2)
+            vals['precio_unitario'] = self.documento.totalVenta
+            vals['descuento'] = 0.0
+            vals['subtotal'] = round(self.documento.totalVenta - self.documento.totalTributos,2)
+            vals['tipo_de_igv'] = self.documento.totalTributos and '1' or '8'
+            vals['igv'] = self.documento.totalTributos
+            vals['total'] = self.documento.totalVenta
             vals['anticipo_regularizacion'] = ''
             vals['anticipo_documento_serie'] = ''
             vals['anticipo_documento_numero'] = ''
-            if detalle.placa:
-                placa = detalle.placa
             items.append(vals)
 
         for detalle in self.documento.anticipos:
