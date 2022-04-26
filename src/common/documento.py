@@ -447,5 +447,6 @@ class Anticipo:
             elif self.tipoDocumento == '03':
                 self.tipoCodigo = '03'
         self.monto = round(vals.get('monto', 0.0),2)
+        self.impuestos = round(vals.get('impuestos', 0.0),2)
         self.fecha = vals.get('fecha', '')
         

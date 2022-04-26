@@ -192,7 +192,7 @@ class NubeFactPSE:
                 elif tributo.ideTributo == '7152':
                     vals['precio_unitario'] = round(vals['valor_unitario']+tributo.montoTributo, 10)
             vals['descuento'] = descuento
-            vals['subtotal'] = detalle.mtoValorUnitario*detalle.cantidad - descuento      
+            vals['subtotal'] = detalle.mtoValorUnitario*detalle.cantidad - descuento
             vals['tipo_de_igv'] = data['tipo_de_igv'].get(detalle.tipAfectacion,detalle.tipAfectacion)
             vals['igv'] = detalle.sumTotTributosItem
             vals['total'] = detalle.mtoPrecioVentaUnitario*detalle.cantidad
@@ -202,6 +202,26 @@ class NubeFactPSE:
             if detalle.placa:
                 placa = detalle.placa
             items.append(vals)
+
+        for detalle in self.documento.anticipos:
+            vals = {}
+            vals['unidad_de_medida'] = 'NIU'
+            vals['codigo'] = '001'
+            vals['codigo_producto_sunat'] = ''
+            vals['descripcion'] = "ANTICIPO %s" % detalle.numero
+            vals['cantidad'] = 1
+            vals['valor_unitario'] = round(detalle.monto - detalle.impuestos, 2)
+            vals['precio_unitario'] = detalle.monto
+            vals['descuento'] = 0.0
+            vals['subtotal'] = round(detalle.monto - detalle.impuestos, 2)
+            vals['tipo_de_igv'] = detalle.impuestos and '1' or '8'
+            vals['igv'] = detalle.impuestos
+            vals['total'] = detalle.monto
+            vals['anticipo_regularizacion'] = True
+            vals['anticipo_documento_serie'] = detalle.numero.split('-')[0]
+            vals['anticipo_documento_numero'] = detalle.numero.split('-')[-1]
+            items.append(vals)
+
         vals = {}
         vals['items'] = items
         vals['placa'] = placa
