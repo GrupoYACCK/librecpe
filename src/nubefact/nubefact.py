@@ -175,7 +175,7 @@ class NubeFactPSE:
         placa = ""
         items = []
         cont = 0
-        if not self.documento.detalles:
+        if not self.documento.anticipos:
             for detalle in self.documento.detalles:
                 vals = {}
                 vals['unidad_de_medida'] = detalle.codUnidadMedida
