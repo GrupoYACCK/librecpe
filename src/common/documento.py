@@ -335,7 +335,7 @@ class Detalle:
         self.codProductoSUNAT = vals.get('codProductoSUNAT', '')
         self.codProductoGTIN = vals.get('codProductoGTIN', '')
         self.tipoProductoGTIN = vals.get('tipoProductoGTIN', '')
-        self.descripcion = vals.get('descripcion', '').replace("\n", " ")[:250].strip()
+        self.descripcion = vals.get('descripcion', '').strip()
         self.mtoValorUnitario = round(vals.get('mtoValorUnitario', 0.0), 10)
         self.sumTotTributosItem = round(vals.get('sumTotTributosItem', 0.0),2)
         tributos = []

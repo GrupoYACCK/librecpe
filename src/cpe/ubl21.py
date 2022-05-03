@@ -450,7 +450,7 @@ class Ubl21:
             
             item = etree.SubElement(line, "{%s}%s" % (self._cac, 'Item'), nsmap={'cac':self._cac})
             # Detalle
-            etree.SubElement(item, "{%s}%s" % (self._cbc, 'Description'), nsmap={'cbc':self._cbc}).text = etree.CDATA(detalle.descripcion)
+            etree.SubElement(item, "{%s}%s" % (self._cbc, 'Description'), nsmap={'cbc':self._cbc}).text = etree.CDATA(detalle.descripcion.replace("\n", " ")[:250])
             
             # Código de producto
             identification = etree.SubElement(item, "{%s}%s" % (self._cac, 'SellersItemIdentification'), nsmap={'cac':self._cac})
@@ -684,7 +684,7 @@ class Ubl21:
             tag = etree.QName(self._cac, 'Item')   
             item=etree.SubElement(despatch, tag.text, nsmap={'cac':tag.namespace})
             tag = etree.QName(self._cbc, 'Name')   
-            etree.SubElement(item, tag.text, nsmap={'cbc':tag.namespace}).text=etree.CDATA(detalle.descripcion)
+            etree.SubElement(item, tag.text, nsmap={'cbc':tag.namespace}).text=etree.CDATA(detalle.descripcion.replace("\n", " ")[:250])
             
             tag = etree.QName(self._cac, 'SellersItemIdentification')   
             ident=etree.SubElement(item, tag.text, nsmap={'cac':tag.namespace})
