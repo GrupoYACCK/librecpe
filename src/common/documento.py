@@ -82,6 +82,8 @@ class Documento:
         self.puerto = ''
         self.anticipos = set()
         self.notas = ''
+
+        self.detraccion = set()
     
     def validate(self):
         if not self.tributos:
@@ -174,6 +176,10 @@ class Documento:
             for anticipo in vals.get('anticipos', []):
                 self.anticipos.add(Anticipo(anticipo)) 
             self.notas = vals.get("notas")
+
+            if vals.get('detraccion'):
+                self.detraccion = Detraccion(vals.get('detraccion'))
+
         elif self.tipoDocumento in ['09']:
             self.observacion = vals.get('observacion')
             self.fecEmision = datetime.strptime(vals.get('fecEmision'),'%Y-%m-%d') # datetime.strptime(vals.get('fecEmision'), datetime.now(tz=pytz.timezone('America/Lima'))).strftime("%Y-%m-%d"), "%Y-%m-%d") 
@@ -449,4 +455,12 @@ class Anticipo:
         self.monto = round(vals.get('monto', 0.0),2)
         self.impuestos = round(vals.get('impuestos', 0.0),2)
         self.fecha = vals.get('fecha', '')
-        
+
+class Detraccion:
+
+    def __init__(self, vals={}):
+        self.cuentaBanco = vals.get('cuentaBanco')
+        self.medioPago = vals.get('medioPago', '001')
+        self.codigo = vals.get('codigo', '')
+        self.monto = round(vals.get('monto', 0.0), 2)
+        self.procentaje = round(vals.get('procentaje'), 5)

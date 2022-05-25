@@ -129,7 +129,29 @@ class Ubl21:
                     etree.SubElement(despatch, "{%s}%s" % (self._cbc, 'DocumentTypeCode'), listAgencyName="PE:SUNAT",
                                      listName="Tipo de Documento", listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01",
                                      nsmap={'cbc':self._cbc}).text = guia.tipoDocumento
-        
+
+    def _getDetraccion(self):
+        if self.documento.detraccion:
+            payment = etree.SubElement(self._root, "{%s}%s" % (self._cac, 'PaymentMeans'), nsmap={'cac': self._cac})
+            etree.SubElement(payment, "{%s}%s" % (self._cbc, 'ID'), nsmap={'cbc': self._cbc}).text = 'Detraccion'
+            etree.SubElement(payment, "{%s}%s" % (self._cbc, 'PaymentMeansCode'),
+                             nsmap={'cbc': self._cbc}).text = self.documento.detraccion.medioPago
+
+            payee = etree.SubElement(payment, "{%s}%s" % (self._cac, 'PayeeFinancialAccount'), nsmap={'cac': self._cac})
+            etree.SubElement(payee, "{%s}%s" % (self._cbc, 'ID'),
+                             nsmap={'cbc': self._cbc}).text = self.documento.detraccion.cuentaBanco
+
+            payment = etree.SubElement(self._root, "{%s}%s" % (self._cac, 'PaymentTerms'), nsmap={'cac': self._cac})
+            #etree.SubElement(payment, "{%s}%s" % (self._cbc, 'ID'), nsmap={'cbc': self._cbc}).text = 'Detraccion'
+            etree.SubElement(payment, "{%s}%s" % (self._cbc, 'PaymentMeansID'),
+                             nsmap={'cbc': self._cbc}).text = self.documento.detraccion.codigo
+
+            etree.SubElement(payment, "{%s}%s" % (self._cbc, 'PaymentPercent'),
+                             nsmap={'cbc': self._cbc}).text = str(self.documento.detraccion.procentaje)
+
+            etree.SubElement(payment, "{%s}%s" % (self._cbc, 'Amount'), currencyID=self.documento.tipMoneda,
+                             nsmap={'cbc': self._cbc}).text = str(self.documento.detraccion.monto)
+
     def _getMedioPago(self):
         if (self.documento.tipoDocumento in ['07'] and self.documento.medioPago.tipo == 'Credito') or self.documento.tipoDocumento not in ['07']:
             payment = etree.SubElement(self._root, "{%s}%s" % (self._cac, 'PaymentTerms'), nsmap={'cac':self._cac})
@@ -508,6 +530,7 @@ class Ubl21:
         self._getFirma()
         self._getEmisor()
         self._getAdquirente()
+        self._getDetraccion()
         self._getMedioPago()
         if self.documento.tipoDocumento in ['01', '03']:
             self._getMontoAnticipos()
