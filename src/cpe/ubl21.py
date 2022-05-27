@@ -142,14 +142,14 @@ class Ubl21:
                              nsmap={'cbc': self._cbc}).text = self.documento.detraccion.cuentaBanco
 
             payment = etree.SubElement(self._root, "{%s}%s" % (self._cac, 'PaymentTerms'), nsmap={'cac': self._cac})
-            #etree.SubElement(payment, "{%s}%s" % (self._cbc, 'ID'), nsmap={'cbc': self._cbc}).text = 'Detraccion'
+            etree.SubElement(payment, "{%s}%s" % (self._cbc, 'ID'), nsmap={'cbc': self._cbc}).text = 'Detraccion'
             etree.SubElement(payment, "{%s}%s" % (self._cbc, 'PaymentMeansID'),
                              nsmap={'cbc': self._cbc}).text = self.documento.detraccion.codigo
 
             etree.SubElement(payment, "{%s}%s" % (self._cbc, 'PaymentPercent'),
                              nsmap={'cbc': self._cbc}).text = str(self.documento.detraccion.procentaje)
 
-            etree.SubElement(payment, "{%s}%s" % (self._cbc, 'Amount'), currencyID=self.documento.tipMoneda,
+            etree.SubElement(payment, "{%s}%s" % (self._cbc, 'Amount'), currencyID="PEN",
                              nsmap={'cbc': self._cbc}).text = str(self.documento.detraccion.monto)
 
     def _getMedioPago(self):
