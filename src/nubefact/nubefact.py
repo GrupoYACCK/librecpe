@@ -155,10 +155,11 @@ class NubeFactPSE:
         vals = {}
         vals['descuento_global'] = self.documento.totalDescuentos
         descuento = 0.0
-        for detalle in self.documento.detalles:
-            for desc in detalle.cargoDescuentos:
-                if desc.indicador == 'false':
-                    descuento += desc.monto
+        if self.documento.tipoDocumento not in ['07', '08']:
+            for detalle in self.documento.detalles:
+                for desc in detalle.cargoDescuentos:
+                    if desc.indicador == 'false':
+                        descuento += desc.monto
         vals['total_descuento'] = self.documento.totalDescuentos + descuento
         anticipo = self.documento.totalAnticipos - sum(detalle.impuestos for detalle in self.documento.anticipos)
         vals['total_anticipo'] = anticipo
@@ -186,9 +187,10 @@ class NubeFactPSE:
                 vals['valor_unitario'] = detalle.mtoValorUnitario
                 vals['precio_unitario'] = detalle.mtoPrecioVentaUnitario
                 descuento = 0.0
-                for desc in detalle.cargoDescuentos:
-                    if desc.indicador == 'false':
-                        descuento += desc.monto
+                if self.documento.tipoDocumento not in ['07', '08']:
+                    for desc in detalle.cargoDescuentos:
+                        if desc.indicador == 'false':
+                            descuento += desc.monto
                 for tributo in detalle.tributos:
                     if descuento > 0.0 and tributo.procentaje > 0.0 and tributo.ideTributo != '7152':
                         vals['precio_unitario'] = round(vals['valor_unitario'] * (1 + tributo.procentaje / 100), 10)
