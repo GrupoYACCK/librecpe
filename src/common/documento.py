@@ -84,6 +84,7 @@ class Documento:
         self.notas = ''
 
         self.detraccion = set()
+        self.retencion = set()
     
     def validate(self):
         if not self.tributos:
@@ -179,6 +180,8 @@ class Documento:
 
             if vals.get('detraccion'):
                 self.detraccion = Detraccion(vals.get('detraccion'))
+            if vals.get('retencion'):
+                self.retencion = Retencion(vals.get('retencion'))
 
         elif self.tipoDocumento in ['09']:
             self.observacion = vals.get('observacion')
@@ -463,4 +466,11 @@ class Detraccion:
         self.medioPago = vals.get('medioPago', '001')
         self.codigo = vals.get('codigo', '')
         self.monto = round(vals.get('monto', 0.0), 2)
-        self.procentaje = round(vals.get('procentaje'), 5)
+        self.porcentaje = round(vals.get('porcentaje', 0.0), 5)
+
+class Retencion:
+    def __init__(self, vals={}):
+        self.codigo = vals.get('codigo', '')
+        self.base = round(vals.get('base', 0.0), 2)
+        self.monto = round(vals.get('monto', 0.0), 2)
+        self.porcentaje = round(vals.get('porcentaje', 0.0)/100, 5)

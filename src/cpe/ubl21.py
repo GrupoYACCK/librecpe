@@ -147,10 +147,34 @@ class Ubl21:
                              nsmap={'cbc': self._cbc}).text = self.documento.detraccion.codigo
 
             etree.SubElement(payment, "{%s}%s" % (self._cbc, 'PaymentPercent'),
-                             nsmap={'cbc': self._cbc}).text = str(self.documento.detraccion.procentaje)
+                             nsmap={'cbc': self._cbc}).text = str(self.documento.detraccion.porcentaje)
 
             etree.SubElement(payment, "{%s}%s" % (self._cbc, 'Amount'), currencyID="PEN",
                              nsmap={'cbc': self._cbc}).text = str(self.documento.detraccion.monto)
+
+    def _getRetencion(self):
+        if self.documento.retencion:
+            tag = etree.QName(self._cac, 'AllowanceCharge')
+            allowance_charge = etree.SubElement(self._root, tag.text, nsmap={'cac': tag.namespace})
+            tag = etree.QName(self._cbc, 'ChargeIndicator')
+            etree.SubElement(allowance_charge, tag.text, nsmap={'cbc': tag.namespace}).text = 'false'
+            tag = etree.QName(self._cbc, 'AllowanceChargeReasonCode')
+            etree.SubElement(allowance_charge, tag.text, listAgencyName='PE:SUNAT', listName='Cargo/descuento',
+                             listURI='urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo53',
+                             nsmap={'cbc': tag.namespace}).text = '62'
+
+            tag = etree.QName(self._cbc, 'MultiplierFactorNumeric')
+            etree.SubElement(allowance_charge, tag.text, nsmap={'cbc': tag.namespace}).text = str(
+                self.documento.retencion.porcentaje)
+
+            tag = etree.QName(self._cbc, 'Amount')
+            etree.SubElement(allowance_charge, tag.text, currencyID=self.documento.tipMoneda,
+                             nsmap={'cbc': tag.namespace}).text = str(self.documento.retencion.monto)
+
+            tag = etree.QName(self._cbc, 'BaseAmount')
+            etree.SubElement(allowance_charge, tag.text, currencyID=self.documento.tipMoneda,
+                             nsmap={'cbc': tag.namespace}).text = str(self.documento.retencion.base)
+
 
     def _getMedioPago(self):
         if (self.documento.tipoDocumento in ['07'] and self.documento.medioPago.tipo == 'Credito') or self.documento.tipoDocumento not in ['07']:
@@ -535,6 +559,7 @@ class Ubl21:
         if self.documento.tipoDocumento in ['01', '03']:
             self._getMontoAnticipos()
         self._getDocumentoRelacionado()
+        self._getRetencion()
         self._getCargoDescuentos(self._root, self.documento.cargoDescuentos)
         self._getTributos(self._root, self.documento.totalTributos)
         self._getMontosGlobales()

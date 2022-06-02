@@ -32,6 +32,10 @@ data = {
         "02": "2",
         "03": "3"
     },
+    "retencion_tipo": {
+        "01": "1",
+        "02": "2",
+    },
     "tipo_de_nota_de_credito": {
         "01": "1",
         "02": "2",
@@ -274,15 +278,20 @@ class NubeFactPSE:
 
     def _getDetraccion(self):
         vals = {}
-        detraccion = False
-        for leyenda in self.documento.leyendas:
-            if leyenda.codLeyenda == '2006':
-                detraccion = True
-        vals['detraccion'] = detraccion
-        if detraccion:
-            vals['detraccion_tipo'] = 29
-            vals['detraccion_total'] = round(self.documento.totalVenta * 0.04, 2)
+        if self.documento.detraccion:
+            vals['detraccion'] = True
+            vals['detraccion_tipo'] = data.get(self.documento.detraccion.codigo)
+            vals['detraccion_total'] = self.documento.detraccion.monto
         return vals
+
+    def _getRetencion(self):
+        vals = {}
+        if self.documento.retencion:
+            vals['retencion_tipo'] = data.get('retencion_tipo').get(self.documento.retencion.codigo)
+            vals['retencion_base_imponible'] = self.documento.retencion.base
+            vals['total_retencion'] = self.documento.retencion.monto
+        return vals
+
 
     def getDocumento(self):
         vals = {}
@@ -316,6 +325,7 @@ class NubeFactPSE:
         vals['total_percepcion'] = ''
         vals['total_incluido_percepcion'] = ''
         vals.update(self._getDetraccion())
+        vals.update(self._getRetencion())
         vals['tipo_de_cambio'] = self.documento.tipoDeCambio
         vals.update(self._getCliente())
         if self.documento.tipoDocumento in ['07', '08']:
