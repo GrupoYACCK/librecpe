@@ -157,14 +157,18 @@ class NubeFactPSE:
 
     def _getTotales(self):
         vals = {}
-        vals['descuento_global'] = self.documento.totalDescuentos
+        descuento_global = 0.0
         descuento = 0.0
         if self.documento.tipoDocumento not in ['07', '08']:
             for detalle in self.documento.detalles:
                 for desc in detalle.cargoDescuentos:
                     if desc.indicador == 'false':
                         descuento += desc.monto
-        vals['total_descuento'] = self.documento.totalDescuentos + descuento
+            for desc in self.documento.cargoDescuentos:
+                if desc.indicador == 'false':
+                    descuento_global += desc.monto
+        vals['descuento_global'] = descuento_global
+        vals['total_descuento'] = descuento_global + descuento
         anticipo = self.documento.totalAnticipos - sum(detalle.impuestos for detalle in self.documento.anticipos)
         vals['total_anticipo'] = anticipo
         vals['total_gravada'] = self.documento.totalValVenta - 2 * anticipo
@@ -280,7 +284,7 @@ class NubeFactPSE:
         vals = {}
         if self.documento.detraccion:
             vals['detraccion'] = True
-            vals['detraccion_tipo'] = data.get(self.documento.detraccion.codigo)
+            vals['detraccion_tipo'] = data.get('detraccion_tipo', {}).get(self.documento.detraccion.codigo)
             vals['detraccion_total'] = self.documento.detraccion.monto
         return vals
 
