@@ -169,13 +169,27 @@ class NubeFactPSE:
                     descuento_global += desc.monto
         vals['descuento_global'] = descuento_global
         vals['total_descuento'] = descuento_global + descuento
-        anticipo = self.documento.totalAnticipos - sum(detalle.impuestos for detalle in self.documento.anticipos)
-        vals['total_anticipo'] = anticipo
-        vals['total_gravada'] = self.documento.totalValVenta - 2 * anticipo
-        vals['total_inafecta'] = 0.0
-        vals['total_exonerada'] = 0.0
-        vals['total_igv'] = self.documento.totalTributos - sum(
-            detalle.impuestos for detalle in self.documento.anticipos)
+        #total_anticipo = 0.0 self.documento.totalAnticipos - sum(detalle.impuestos for detalle in self.documento.anticipos)
+        total_anticipo = 0.0
+        total_gravada = 0.0
+        total_inafecta = 0.0
+        total_exonerada = 0.0
+        total_igv = 0.0
+        for tributo in self.documento.tributos:
+            if tributo.ideTributo == '1000':
+                total_gravada+= tributo.baseTributo
+                total_igv+= tributo.montoTributo
+            elif tributo.ideTributo == '9997':
+                total_exonerada += tributo.baseTributo
+            elif tributo.ideTributo == '9998':
+                total_inafecta += tributo.baseTributo
+        vals['total_anticipo'] = total_anticipo
+        vals['total_gravada'] = total_gravada  # - 2 * anticipo
+        vals['total_inafecta'] = total_inafecta
+        vals['total_exonerada'] = total_exonerada
+        vals['total_igv'] = total_igv  # - sum(
+        # detalle.impuestos for detalle in self.documento.anticipos)
+
         vals['total_otros_cargos'] = self.documento.totalCargos
         vals['total'] = self.documento.totalVenta - self.documento.totalAnticipos
         return vals
