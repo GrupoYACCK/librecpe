@@ -181,7 +181,7 @@ class NubeFactPSE:
                 total_igv+= tributo.montoTributo
             elif tributo.ideTributo == '9997':
                 total_exonerada += tributo.baseTributo
-            elif tributo.ideTributo == '9998':
+            elif tributo.ideTributo in ['9998', '9995']:
                 total_inafecta += tributo.baseTributo
         vals['total_anticipo'] = total_anticipo
         vals['total_gravada'] = total_gravada  # - 2 * anticipo
