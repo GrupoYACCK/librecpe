@@ -159,22 +159,26 @@ class NubeFactPSE:
         vals = {}
         descuento_global = 0.0
         descuento = 0.0
+        total_anticipo = 0.0
         if self.documento.tipoDocumento not in ['07', '08']:
             for detalle in self.documento.detalles:
                 for desc in detalle.cargoDescuentos:
                     if desc.indicador == 'false':
                         descuento += desc.monto
             for desc in self.documento.cargoDescuentos:
-                if desc.indicador == 'false':
+                if desc.indicador == 'false' and desc.codigo not in ['04']:
                     descuento_global += desc.monto
+                elif desc.codigo in ['04']:
+                    total_anticipo = desc.monto
         vals['descuento_global'] = descuento_global
         vals['total_descuento'] = descuento_global + descuento
         #total_anticipo = 0.0 self.documento.totalAnticipos - sum(detalle.impuestos for detalle in self.documento.anticipos)
-        total_anticipo = 0.0
+
         total_gravada = 0.0
         total_inafecta = 0.0
         total_exonerada = 0.0
         total_igv = 0.0
+        total_impuestos_bolsas = 0.0
         for tributo in self.documento.tributos:
             if tributo.ideTributo == '1000':
                 total_gravada+= tributo.baseTributo
@@ -183,13 +187,16 @@ class NubeFactPSE:
                 total_exonerada += tributo.baseTributo
             elif tributo.ideTributo in ['9998', '9995']:
                 total_inafecta += tributo.baseTributo
+            elif tributo.ideTributo == '7152':
+                total_impuestos_bolsas += tributo.baseTributo
+
         vals['total_anticipo'] = total_anticipo
         vals['total_gravada'] = total_gravada  # - 2 * anticipo
         vals['total_inafecta'] = total_inafecta
         vals['total_exonerada'] = total_exonerada
         vals['total_igv'] = total_igv  # - sum(
         # detalle.impuestos for detalle in self.documento.anticipos)
-
+        vals['total_impuestos_bolsas'] = total_impuestos_bolsas
         vals['total_otros_cargos'] = self.documento.totalCargos
         vals['total'] = self.documento.totalVenta - self.documento.totalAnticipos
         return vals
@@ -198,58 +205,64 @@ class NubeFactPSE:
         placa = ""
         items = []
         cont = 0
-        if not self.documento.anticipos:
-            for detalle in self.documento.detalles:
-                vals = {}
-                vals['unidad_de_medida'] = detalle.codUnidadMedida
-                vals['codigo'] = detalle.codProducto
-                vals['codigo_producto_sunat'] = detalle.codProductoSUNAT
-                vals['descripcion'] = detalle.descripcion
-                vals['cantidad'] = detalle.cantidad
-                vals['valor_unitario'] = detalle.mtoValorUnitario
-                vals['precio_unitario'] = detalle.mtoPrecioVentaUnitario
-                descuento = 0.0
-                if self.documento.tipoDocumento not in ['07', '08']:
-                    for desc in detalle.cargoDescuentos:
-                        if desc.indicador == 'false':
-                            descuento += desc.monto
-                for tributo in detalle.tributos:
-                    if descuento > 0.0 and tributo.procentaje > 0.0 and tributo.ideTributo != '7152':
-                        vals['precio_unitario'] = round(vals['valor_unitario'] * (1 + tributo.procentaje / 100), 10)
-                    elif tributo.ideTributo == '7152':
-                        vals['precio_unitario'] = round(vals['valor_unitario'] + tributo.montoTributo, 10)
-                vals['descuento'] = descuento
-                vals['subtotal'] = detalle.mtoValorUnitario * detalle.cantidad - descuento
-                vals['tipo_de_igv'] = data['tipo_de_igv'].get(detalle.tipAfectacion, detalle.tipAfectacion)
-                vals['igv'] = detalle.sumTotTributosItem
-                vals['total'] = detalle.mtoPrecioVentaUnitario * detalle.cantidad
-                vals['anticipo_regularizacion'] = ''
-                vals['anticipo_documento_serie'] = ''
-                vals['anticipo_documento_numero'] = ''
-                if detalle.placa:
-                    placa = detalle.placa
-                items.append(vals)
-        else:
-            descripcion = []
-            for detalle in self.documento.detalles:
-                descripcion.append("%s %s %s" % (detalle.descripcion, detalle.codUnidadMedida, str(detalle.cantidad)))
+        #if not self.documento.anticipos:
+        for detalle in self.documento.detalles:
             vals = {}
-            vals['unidad_de_medida'] = 'NIU'
-            vals['codigo'] = '001'
-            vals['codigo_producto_sunat'] = ''
-            vals['descripcion'] = "REGULARIZACIÓN DEL ANTICIPO\n%s" % "\n".join(descripcion)
-            vals['cantidad'] = 1
-            vals['valor_unitario'] = round(self.documento.totalVenta - self.documento.totalTributos, 2)
-            vals['precio_unitario'] = self.documento.totalVenta
-            vals['descuento'] = 0.0
-            vals['subtotal'] = round(self.documento.totalVenta - self.documento.totalTributos, 2)
-            vals['tipo_de_igv'] = self.documento.totalTributos and '1' or '8'
-            vals['igv'] = self.documento.totalTributos
-            vals['total'] = self.documento.totalVenta
+            vals['unidad_de_medida'] = detalle.codUnidadMedida
+            vals['codigo'] = detalle.codProducto
+            vals['codigo_producto_sunat'] = detalle.codProductoSUNAT
+            vals['descripcion'] = detalle.descripcion
+            vals['cantidad'] = detalle.cantidad
+            vals['valor_unitario'] = detalle.mtoValorUnitario
+            vals['precio_unitario'] = detalle.mtoPrecioVentaUnitario
+            descuento = 0.0
+            if self.documento.tipoDocumento not in ['07', '08']:
+                for desc in detalle.cargoDescuentos:
+                    if desc.indicador == 'false':
+                        descuento += desc.monto
+            total_impuestos_bolsas = 0.0
+            igv = 0.0
+            for tributo in detalle.tributos:
+                if descuento > 0.0 and tributo.procentaje > 0.0 and tributo.ideTributo != '7152':
+                    vals['precio_unitario'] = round(vals['valor_unitario'] * (1 + tributo.procentaje / 100), 10)
+                elif tributo.ideTributo == '7152':
+                    vals['precio_unitario'] = round(vals['valor_unitario'] + tributo.montoTributo, 10)
+                    total_impuestos_bolsas += tributo.montoTributo
+                elif tributo.ideTributo == '1000':
+                    igv += tributo.montoTributo
+            vals['descuento'] = descuento
+            vals['subtotal'] = detalle.mtoValorUnitario * detalle.cantidad - descuento
+            vals['tipo_de_igv'] = data['tipo_de_igv'].get(detalle.tipAfectacion, detalle.tipAfectacion)
+            vals['igv'] = igv
+            vals['total_impuestos_bolsas'] = total_impuestos_bolsas
+            vals['total'] = detalle.mtoPrecioVentaUnitario * detalle.cantidad
             vals['anticipo_regularizacion'] = ''
             vals['anticipo_documento_serie'] = ''
             vals['anticipo_documento_numero'] = ''
+            if detalle.placa:
+                placa = detalle.placa
             items.append(vals)
+        #else:
+        #    descripcion = []
+        #    for detalle in self.documento.detalles:
+        #        descripcion.append("%s %s %s" % (detalle.descripcion, detalle.codUnidadMedida, str(detalle.cantidad)))
+        #    vals = {}
+        #    vals['unidad_de_medida'] = 'NIU'
+        #    vals['codigo'] = '001'
+        #    vals['codigo_producto_sunat'] = ''
+        #    vals['descripcion'] = "REGULARIZACIÓN DEL ANTICIPO\n%s" % "\n".join(descripcion)
+        #    vals['cantidad'] = 1
+        #    vals['valor_unitario'] = round(self.documento.totalVenta - self.documento.totalTributos, 2)
+        #    vals['precio_unitario'] = self.documento.totalVenta
+        #    vals['descuento'] = 0.0
+        #    vals['subtotal'] = round(self.documento.totalVenta - self.documento.totalTributos, 2)
+        #    vals['tipo_de_igv'] = self.documento.totalTributos and '1' or '8'
+        #    vals['igv'] = self.documento.totalTributos
+        #    vals['total'] = self.documento.totalVenta
+        #    vals['anticipo_regularizacion'] = ''
+        #    vals['anticipo_documento_serie'] = ''
+        #    vals['anticipo_documento_numero'] = ''
+        #    items.append(vals)
 
         for detalle in self.documento.anticipos:
             vals = {}
@@ -258,12 +271,29 @@ class NubeFactPSE:
             vals['codigo_producto_sunat'] = ''
             vals['descripcion'] = "ANTICIPO %s" % detalle.numero
             vals['cantidad'] = 1
-            vals['valor_unitario'] = round(detalle.monto - detalle.impuestos, 2)
+            total_impuestos_bolsas = 0.0
+            igv = 0.0
+            tipo_de_igv = '10'
+            for tributo in detalle.tributos:
+                if tributo.ideTributo == '7152':
+                    vals['precio_unitario'] = round(vals['valor_unitario'] + tributo.montoTributo, 10)
+                    total_impuestos_bolsas += tributo.montoTributo
+                elif tributo.ideTributo == '1000':
+                    igv += tributo.montoTributo
+                elif tributo.ideTributo == '9995':
+                    tipo_de_igv='40'
+                elif tributo.ideTributo == '9997':
+                    tipo_de_igv='20'
+                elif tributo.ideTributo == '9998':
+                    tipo_de_igv='30'
+
+            vals['valor_unitario'] = round(detalle.monto - igv - total_impuestos_bolsas, 2)
             vals['precio_unitario'] = detalle.monto
             vals['descuento'] = 0.0
-            vals['subtotal'] = round(detalle.monto - detalle.impuestos, 2)
-            vals['tipo_de_igv'] = detalle.impuestos and '1' or '8'
-            vals['igv'] = detalle.impuestos
+            vals['subtotal'] = round(detalle.monto - - igv - total_impuestos_bolsas, 2)
+            vals['tipo_de_igv'] =  data['tipo_de_igv'].get(tipo_de_igv, tipo_de_igv)
+            vals['total_impuestos_bolsas'] = total_impuestos_bolsas
+            vals['igv'] = igv
             vals['total'] = detalle.monto
             vals['anticipo_regularizacion'] = True
             vals['anticipo_documento_serie'] = detalle.numero.split('-')[0]
