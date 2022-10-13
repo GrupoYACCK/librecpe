@@ -188,7 +188,7 @@ class NubeFactPSE:
             elif tributo.ideTributo in ['9998', '9995']:
                 total_inafecta += tributo.baseTributo
             elif tributo.ideTributo == '7152':
-                total_impuestos_bolsas += tributo.baseTributo
+                total_impuestos_bolsas += tributo.montoTributo
 
         vals['total_anticipo'] = total_anticipo
         vals['total_gravada'] = total_gravada  # - 2 * anticipo
@@ -220,21 +220,21 @@ class NubeFactPSE:
                 for desc in detalle.cargoDescuentos:
                     if desc.indicador == 'false':
                         descuento += desc.monto
-            total_impuestos_bolsas = 0.0
+            impuesto_bolsas = 0.0
             igv = 0.0
             for tributo in detalle.tributos:
                 if descuento > 0.0 and tributo.procentaje > 0.0 and tributo.ideTributo != '7152':
                     vals['precio_unitario'] = round(vals['valor_unitario'] * (1 + tributo.procentaje / 100), 10)
                 elif tributo.ideTributo == '7152':
-                    vals['precio_unitario'] = round(vals['valor_unitario'] + tributo.montoTributo, 10)
-                    total_impuestos_bolsas += tributo.montoTributo
+                    # vals['precio_unitario'] = round(vals['valor_unitario'] + tributo.montoTributo, 10)
+                    impuesto_bolsas += tributo.montoTributo
                 elif tributo.ideTributo == '1000':
                     igv += tributo.montoTributo
             vals['descuento'] = descuento
             vals['subtotal'] = detalle.mtoValorUnitario * detalle.cantidad - descuento
             vals['tipo_de_igv'] = data['tipo_de_igv'].get(detalle.tipAfectacion, detalle.tipAfectacion)
             vals['igv'] = igv
-            vals['total_impuestos_bolsas'] = total_impuestos_bolsas
+            vals['impuesto_bolsas'] = impuesto_bolsas
             vals['total'] = detalle.mtoPrecioVentaUnitario * detalle.cantidad
             vals['anticipo_regularizacion'] = ''
             vals['anticipo_documento_serie'] = ''
