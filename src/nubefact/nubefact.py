@@ -225,7 +225,7 @@ class NubeFactPSE:
             for tributo in detalle.tributos:
                 if descuento > 0.0 and tributo.procentaje > 0.0 and tributo.ideTributo != '7152':
                     vals['precio_unitario'] = round(vals['valor_unitario'] * (1 + tributo.procentaje / 100), 10)
-                elif tributo.ideTributo == '7152':
+                if tributo.ideTributo == '7152':
                     # vals['precio_unitario'] = round(vals['valor_unitario'] + tributo.montoTributo, 10)
                     impuesto_bolsas += tributo.montoTributo
                 elif tributo.ideTributo == '1000':
