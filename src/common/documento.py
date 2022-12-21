@@ -1,7 +1,7 @@
 from datetime import datetime
 import pytz
 from base64 import encodebytes, decodebytes
-from . import Emisor, Adquirente, Servidor
+from . import Emisor, Adquirente, Servidor, Transportista
 from . import LibreCpeError
 from librecpe.cpe import LibreCPE, Soap, Cliente
 from librecpe.nubefact import NubeFactPSE
@@ -206,7 +206,7 @@ class Documento:
             self.fechaTraslado = vals.get('fechaTraslado', "")
             
             for transportista in vals.get('transportistas', []):
-                self.transportistas.add(Adquirente(transportista))
+                self.transportistas.add(Transportista(transportista))
             # VEHICULO (Transporte Privado)
             self.placa = vals.get('placa', '')
             

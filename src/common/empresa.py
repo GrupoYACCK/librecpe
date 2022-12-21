@@ -56,3 +56,7 @@ class Adquirente(Empresa):
         res = super(Adquirente, self).validate()
         return res
         
+class Transportista(Adquirente):
+    def __init__(self, vals={}):
+        super(Transportista, self).__init__(vals)
+        self.licencia = vals.get('licencia', '').strip()

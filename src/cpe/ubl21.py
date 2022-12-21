@@ -681,6 +681,11 @@ class Ubl21:
                 tag = etree.QName(self._cbc, 'ID')   
                 etree.SubElement(customer, tag.text, schemeID= transportista.numDocumento  or '-',
                                  nsmap={'cbc':tag.namespace}).text=transportista.numDocumento or '-'
+                if transportista.licencia:
+                    tag = etree.QName(self._cac, 'IdentityDocumentReference')
+                    reference = etree.SubElement(stage, tag.text, nsmap={'cac': tag.namespace})
+                    tag = etree.QName(self._cbc, 'ID')
+                    etree.SubElement(reference, tag.text, nsmap={'cbc':tag.namespace}).text = transportista.licencia or '-'
             
         tag = etree.QName(self._cac, 'Delivery')
         delivery = etree.SubElement(shipment, tag.text, nsmap={'cac':tag.namespace})

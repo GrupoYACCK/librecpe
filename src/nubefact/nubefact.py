@@ -2,7 +2,8 @@ import json
 from datetime import datetime
 import requests
 import re
-
+import logging
+log = logging.getLogger(__name__)
 data = {
     "tipo_de_comprobante": {
         "01": "1",
@@ -179,6 +180,7 @@ class NubeFactPSE:
         total_exonerada = 0.0
         total_igv = 0.0
         total_impuestos_bolsas = 0.0
+        total_gratuita = 0.0
         for tributo in self.documento.tributos:
             if tributo.ideTributo == '1000':
                 total_gravada+= tributo.baseTributo
@@ -189,6 +191,8 @@ class NubeFactPSE:
                 total_inafecta += tributo.baseTributo
             elif tributo.ideTributo == '7152':
                 total_impuestos_bolsas += tributo.montoTributo
+            elif tributo.ideTributo == '9996':
+                total_gratuita += tributo.baseTributo
 
         vals['total_anticipo'] = total_anticipo
         vals['total_gravada'] = total_gravada  # - 2 * anticipo
@@ -198,6 +202,7 @@ class NubeFactPSE:
         # detalle.impuestos for detalle in self.documento.anticipos)
         vals['total_impuestos_bolsas'] = total_impuestos_bolsas
         vals['total_otros_cargos'] = self.documento.totalCargos
+        vals['total_gratuita'] = total_gratuita
         vals['total'] = self.documento.totalVenta - self.documento.totalAnticipos
         return vals
 
@@ -213,8 +218,8 @@ class NubeFactPSE:
             vals['codigo_producto_sunat'] = detalle.codProductoSUNAT
             vals['descripcion'] = detalle.descripcion
             vals['cantidad'] = detalle.cantidad
-            vals['valor_unitario'] = detalle.mtoValorUnitario
-            vals['precio_unitario'] = detalle.mtoPrecioVentaUnitario
+            vals['valor_unitario'] = detalle.mtoValorUnitario or detalle.mtoValorReferencialUnitario
+            vals['precio_unitario'] = detalle.mtoPrecioVentaUnitario or detalle.mtoValorReferencialUnitario
             descuento = 0.0
             if self.documento.tipoDocumento not in ['07', '08']:
                 for desc in detalle.cargoDescuentos:
@@ -231,11 +236,11 @@ class NubeFactPSE:
                 elif tributo.ideTributo == '1000':
                     igv += tributo.montoTributo
             vals['descuento'] = descuento
-            vals['subtotal'] = detalle.mtoValorUnitario * detalle.cantidad - descuento
+            vals['subtotal'] = (detalle.mtoValorUnitario or detalle.mtoValorReferencialUnitario) * detalle.cantidad - descuento
             vals['tipo_de_igv'] = data['tipo_de_igv'].get(detalle.tipAfectacion, detalle.tipAfectacion)
             vals['igv'] = igv
             vals['impuesto_bolsas'] = impuesto_bolsas
-            vals['total'] = detalle.mtoPrecioVentaUnitario * detalle.cantidad
+            vals['total'] = (detalle.mtoPrecioVentaUnitario or detalle.mtoValorReferencialUnitario) * detalle.cantidad
             vals['anticipo_regularizacion'] = ''
             vals['anticipo_documento_serie'] = ''
             vals['anticipo_documento_numero'] = ''
@@ -421,6 +426,7 @@ class NubeFactPSE:
             vals['conductor_documento_tipo'] = transportista.tipoDocumento
             vals['conductor_documento_numero'] = transportista.numDocumento
             vals['conductor_denominacion'] = transportista.nombre
+            vals['conductor_numero_licencia'] = transportista.licencia
             if transportista.tipoDocumento not in ['6']:
                 break
 
@@ -513,7 +519,6 @@ class NubeFactPSE:
                                          }, json=vals)
             except Exception:
                 return {'estado': False}
-
         res = self._procesarRespuesta(response)
         if not res:
             return {'estado': False, 'respuesta': response.text}
@@ -527,5 +532,6 @@ class NubeFactPSE:
             res = response.json()
         except Exception:
             return {}
+        log.info(response.text)
         return res
 
