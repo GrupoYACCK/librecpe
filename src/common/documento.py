@@ -3,7 +3,7 @@ import pytz
 from base64 import encodebytes, decodebytes
 from . import Emisor, Adquirente, Servidor, Transportista
 from . import LibreCpeError
-from librecpe.cpe import LibreCPE, Soap, Cliente
+from librecpe.cpe import LibreCPE, ClienteCpe, Cliente
 from librecpe.nubefact import NubeFactPSE
 import re
 
@@ -185,7 +185,7 @@ class Documento:
 
         elif self.tipoDocumento in ['09']:
             self.observacion = vals.get('observacion')
-            self.fecEmision = datetime.strptime(vals.get('fecEmision'),'%Y-%m-%d') # datetime.strptime(vals.get('fecEmision'), datetime.now(tz=pytz.timezone('America/Lima'))).strftime("%Y-%m-%d"), "%Y-%m-%d") 
+            self.fecEmision = datetime.strptime(vals.get('fecEmision', datetime.now(tz=pytz.timezone('America/Lima')).strftime("%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
             self.emisor = Emisor(vals.get('emisor', {}))
             for anulado in vals.get('documentosAnulados',[]):
                 self.documentosAnulados.add(DocumentoAnulado(**anulado))
@@ -220,8 +220,7 @@ class Documento:
             # Datos del vehículos
             for vehículo in vals.get('vehículos', []):
                 self.vehículos.add(Vehículo(vehículo))
-                if vehículo.get('principal'):
-                    self.placa = vals.get('placa', '')
+                self.placa = vals.get('placa', '')
             
             # Datos del contenedor (Motivo Importación)
             self.contenedor = vals.get('contenedor', '')
@@ -260,7 +259,7 @@ class Documento:
         servidor_obj.setServidor(servidor)
         if servidor_obj.servidor in ['sunat']:
             ruc = servidor.get('ruc')
-            cliente_soap = Soap(ruc, servidor_obj)
+            cliente_soap = ClienteCpe(ruc, servidor_obj, tipo)
             cliente = Cliente()
             xml = decodebytes(xml)
             zip, estado_respuesta, respuesta, datos_respuesta = cliente.procesar(document_name=nombre_documento, type=tipo, xml=xml, client=cliente_soap)
@@ -279,7 +278,7 @@ class Documento:
         servidor = Servidor()
         servidor.setServidor(soap)
         if servidor.servidor in ['sunat']:
-            cliente_soap = Soap(ruc, servidor)
+            cliente_soap = ClienteCpe(ruc, servidor, tipo)
             cliente = Cliente()
             zip, estado_respuesta, respuesta, datos_respuesta  = cliente.get_status(document_name=nombre_documento, type=tipo, client=cliente_soap, ticket=ticket)
             return {'estado': estado_respuesta, 'respuesta':respuesta, 'datos_respuesta': datos_respuesta}

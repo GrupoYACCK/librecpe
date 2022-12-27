@@ -475,7 +475,7 @@ class NubeFactPSE:
         res = nombre_documento.split('-')
         if tipo in ['ticket', 'ra']:
             operacion = 'consultar_anulacion'
-        elif tipo =="consultar_guia":
+        elif tipo =="guia":
             operacion = 'consultar_guia'
         else:
             operacion = 'consultar_comprobante'

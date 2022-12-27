@@ -40,4 +40,6 @@ class Servidor:
         self.url = vals.get('url', '')
         self.usuario = vals.get('usuario', '')
         self.clave = vals.get('clave', '')
+        self.idCliente = vals.get('idCliente', '')
+        self.claveCliente = vals.get('claveCliente', '')
         return self
