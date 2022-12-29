@@ -729,10 +729,10 @@ class Ubl21:
 
         tag = etree.QName(self._cbc, 'HandlingCode')
         etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.motivo
-        if self.documento.descripcion:
-            tag = etree.QName(self._cbc, 'Information')
-            etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = etree.CDATA(
-                self.documento.descripcion)
+        #if self.documento.descripcion:
+        #    tag = etree.QName(self._cbc, 'Information')
+        #    etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = etree.CDATA(
+        #        self.documento.descripcion)
         tag = etree.QName(self._cbc, 'GrossWeightMeasure')
         etree.SubElement(shipment, tag.text, unitCode="KGM",
                          nsmap={'cbc': tag.namespace}).text = str(self.documento.pesoBruto)
