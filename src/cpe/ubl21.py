@@ -356,7 +356,21 @@ class Ubl21:
                 tag = etree.QName(self._cbc, 'ID')
                 etree.SubElement(reference, tag.text, nsmap={'cbc': tag.namespace}).text = relacionado.numero
                 tag = etree.QName(self._cbc, 'DocumentTypeCode')
-                etree.SubElement(reference, tag.text, nsmap={'cbc': tag.namespace}).text = relacionado.tipoDocumento
+                etree.SubElement(reference, tag.text, listAgencyName="PE:SUNAT",
+                                 listName="Documento relacionado al transporte",
+                                 listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo61",
+                                 nsmap={'cbc': tag.namespace}).text = relacionado.tipoDocumento
+                tag = etree.QName(self._cac, 'IssuerParty')
+                issuer_party = etree.SubElement(reference, tag.text, nsmap={'cac': tag.namespace})
+                tag = etree.QName(self._cac, 'PartyIdentification')
+                party = etree.SubElement(issuer_party, tag.text, nsmap={'cac': tag.namespace})
+                if relacionado.emisor:
+                    tag = etree.QName(self._cbc, 'ID')
+                    etree.SubElement(party, tag.text, schemeID=relacionado.emisor.tipoDocumento,
+                                     schemeName='Documento de Identidad',
+                                     schemeAgencyName='PE:SUNAT',
+                                     schemeURI='urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06',
+                                     nsmap={'cbc': tag.namespace}).text = relacionado.emisor.numDocumento
 
     def _getAnticipos(self):
         if self.documento.tipoDocumento in ['01', '03']:
@@ -729,10 +743,10 @@ class Ubl21:
 
         tag = etree.QName(self._cbc, 'HandlingCode')
         etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.motivo
-        #if self.documento.descripcion:
-        #    tag = etree.QName(self._cbc, 'Information')
-        #    etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = etree.CDATA(
-        #        self.documento.descripcion)
+        if self.documento.descripcion:
+           tag = etree.QName(self._cbc, 'HandlingInstructions')
+           etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = etree.CDATA(
+               self.documento.descripcion)
         tag = etree.QName(self._cbc, 'GrossWeightMeasure')
         etree.SubElement(shipment, tag.text, unitCode="KGM",
                          nsmap={'cbc': tag.namespace}).text = str(self.documento.pesoBruto)
@@ -740,8 +754,16 @@ class Ubl21:
             tag = etree.QName(self._cbc, 'TotalTransportHandlingUnitQuantity')
             etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = str(self.documento.bultos)
 
-        tag = etree.QName(self._cbc, 'SplitConsignmentIndicator')
-        etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.transbordo
+        # tag = etree.QName(self._cbc, 'SplitConsignmentIndicator')
+        # etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.transbordo
+
+        if self.documento.transbordo:
+            tag = etree.QName(self._cbc, 'SpecialInstructions')
+            etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = 'SUNAT_Envio_IndicadorTransbordoProgramado'
+
+        if self.documento.vehiculoM1L:
+            tag = etree.QName(self._cbc, 'SpecialInstructions')
+            etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = 'SUNAT_Envio_IndicadorTrasladoVehiculoM1L'
 
         # ShipmentStage
         tag = etree.QName(self._cac, 'ShipmentStage')
@@ -818,6 +840,11 @@ class Ubl21:
 
         tag = etree.QName(self._cbc, 'Line')
         etree.SubElement(oaddressline, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.direccionLlegada
+
+        # if self.documento.modoTraslado == '02':
+        #     tag = etree.QName(self._cbc, 'AddressTypeCode')
+        #     etree.SubElement(oaddressline, tag.text, listAgencyName="PE:SUNAT", listName="Establecimientos anexos",
+        #                      nsmap={'cbc': tag.namespace}).text = self.documento.codSucursal
 
         if self.documento.modoTraslado == '02':
             tag = etree.QName(self._cac, 'TransportHandlingUnit')

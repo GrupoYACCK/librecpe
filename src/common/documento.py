@@ -56,9 +56,12 @@ class Documento:
         self.destinatario = Adquirente()
         
         self.establecimientoTercero = Adquirente()
-                    
+        self.codSucursal = ""
         self.descripcion = ""
         self.transbordo = ""
+
+        self.vehiculoM1L = False
+
         self.pesoBruto = 0.0
         self.bultos = 0.0
         
@@ -197,9 +200,10 @@ class Documento:
             
             # Datos de envio
             self.motivo = vals.get('motivo', "")
-            
+            self.codSucursal = vals.get("codSucursal", "")
             self.descripcion = vals.get('descripcion', "")
-            self.transbordo = vals.get('transbordo', "false")
+            self.transbordo = vals.get('transbordo', False)
+            self.vehiculoM1L = vals.get('vehiculoM1L', False)
             self.pesoBruto = vals.get('pesoBruto', 0.0)
             self.bultos = vals.get('bultos', 0.0)
             self.modoTraslado = vals.get('modoTraslado', "")
@@ -330,9 +334,10 @@ class DocumentoAnulado:
         
 
 class DocumentoRelacionado:
-    def __init__(self, numero='', tipoDocumento=''):
+    def __init__(self, numero='', tipoDocumento='', emisor=set()):
         self.tipoDocumento = tipoDocumento
         self.numero = numero
+        self.emisor = emisor
 
 class Detalle:
     

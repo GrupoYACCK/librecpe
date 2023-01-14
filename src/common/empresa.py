@@ -48,6 +48,7 @@ class Adquirente(Empresa):
         self.nomPersona = vals.get('nomPersona', '').strip()
         self.apPaterno = vals.get('apPaterno', '').strip()
         self.apMaterno = vals.get('apMaterno', '').strip()
+        self.codSucursal = vals.get('codSucursal', '0000').strip()
         if not self.nombre:
             if self.nomPersona and self.apPaterno:
                 self.nombre = "%s %s, %s" % (self.apPaterno, self.apMaterno, self.nomPersona)    
