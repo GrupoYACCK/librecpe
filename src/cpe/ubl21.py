@@ -182,8 +182,7 @@ class Ubl21:
                              nsmap={'cbc': tag.namespace}).text = '62'
 
             tag = etree.QName(self._cbc, 'MultiplierFactorNumeric')
-            etree.SubElement(allowance_charge, tag.text, nsmap={'cbc': tag.namespace}).text = str(
-                self.documento.retencion.porcentaje)
+            etree.SubElement(allowance_charge, tag.text, nsmap={'cbc': tag.namespace}).text = "%.5f" % self.documento.retencion.porcentaje
 
             tag = etree.QName(self._cbc, 'Amount')
             etree.SubElement(allowance_charge, tag.text, currencyID=self.documento.tipMoneda,
@@ -436,8 +435,7 @@ class Ubl21:
                                  nsmap={'cbc': tag.namespace}).text = cargoDescuento.codigo  # Verificar cattalogo 53
 
             tag = etree.QName(self._cbc, 'MultiplierFactorNumeric')
-            etree.SubElement(allowance_charge, tag.text, nsmap={'cbc': tag.namespace}).text = str(
-                cargoDescuento.porcentaje)
+            etree.SubElement(allowance_charge, tag.text, nsmap={'cbc': tag.namespace}).text = "%.5f" % cargoDescuento.porcentaje
 
             tag = etree.QName(self._cbc, 'Amount')
             etree.SubElement(allowance_charge, tag.text, currencyID=self.documento.tipMoneda,
