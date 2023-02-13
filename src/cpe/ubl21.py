@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from collections import OrderedDict
 from lxml import etree
 import re
 
@@ -792,6 +791,9 @@ class Ubl21:
                 party = etree.SubElement(customer, tag.text, nsmap={'cac': tag.namespace})
                 tag = etree.QName(self._cbc, 'RegistrationName')
                 etree.SubElement(party, tag.text, nsmap={'cbc': tag.namespace}).text = etree.CDATA(transportista.nombre)
+                if transportista.numRegistro:
+                    tag = etree.QName(self._cbc, 'CompanyID')
+                    etree.SubElement(party, tag.text, nsmap={'cbc': tag.namespace}).text = transportista.numRegistro
                 break
         else:
             tag = etree.QName(self._cac, 'TransportMeans')
@@ -833,6 +835,11 @@ class Ubl21:
         etree.SubElement(address, tag.text, schemeAgencyName="PE:INEI", schemeName="Ubigeos",
                          nsmap={'cbc': tag.namespace}).text = self.documento.ubigeoLlegada
 
+        if self.documento.motivo in ['04'] and self.documento.codSucursalLlegada and self.documento.rucLlegada:
+            tag = etree.QName(self._cbc, 'AddressTypeCode')
+            etree.SubElement(address, tag.text, listID= self.documento.rucLlegada,
+                             nsmap={'cbc': tag.namespace}).text = self.documento.codSucursalLlegada
+
         tag = etree.QName(self._cac, 'AddressLine')
         oaddressline = etree.SubElement(address, tag.text, nsmap={'cac': tag.namespace})
 
@@ -866,9 +873,13 @@ class Ubl21:
         tag = etree.QName(self._cac, 'DespatchAddress')
         oaddress = etree.SubElement(despatch, tag.text, nsmap={'cac': tag.namespace})
         tag = etree.QName(self._cbc, 'ID')
-
         etree.SubElement(oaddress, tag.text, schemeAgencyName="PE:INEI", schemeName="Ubigeos",
                          nsmap={'cbc': tag.namespace}).text = self.documento.ubigeoPartida
+
+        if self.documento.motivo in ['04'] and self.documento.codSucursalPartida and self.documento.rucPartida:
+            tag = etree.QName(self._cbc, 'AddressTypeCode')
+            etree.SubElement(oaddress, tag.text, listID= self.documento.rucPartida,
+                             nsmap={'cbc': tag.namespace}).text = self.documento.codSucursalPartida
 
         tag = etree.QName(self._cac, 'AddressLine')
         oaddressline = etree.SubElement(oaddress, tag.text, nsmap={'cac': tag.namespace})

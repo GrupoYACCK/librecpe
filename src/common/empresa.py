@@ -61,3 +61,4 @@ class Transportista(Adquirente):
     def __init__(self, vals={}):
         super(Transportista, self).__init__(vals)
         self.licencia = vals.get('licencia', '').strip()
+        self.numRegistro = vals.get('numRegistro', '').strip()

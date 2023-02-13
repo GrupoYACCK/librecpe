@@ -88,6 +88,10 @@ class Documento:
 
         self.detraccion = set()
         self.retencion = set()
+
+        self.codSucursalPartida = ""
+        self.codSucursalLlegada = ""
+        self.rucLlegada = ""
     
     def validate(self):
         if not self.tributos:
@@ -220,7 +224,9 @@ class Documento:
             # Direccion punto de llegada
             self.ubigeoLlegada = vals.get('ubigeoLlegada', '')
             self.direccionLlegada = vals.get('direccionLlegada', '')[:100]
-            
+            self.codSucursalLlegada = vals.get("codSucursalLlegada", '')
+            self.rucLlegada = vals.get("rucLlegada","")
+
             # Datos del vehículos
             for vehículo in vals.get('vehículos', []):
                 self.vehículos.add(Vehículo(vehículo))
@@ -232,7 +238,9 @@ class Documento:
             # Direccion del punto de partida
             self.ubigeoPartida = vals.get("ubigeoPartida", '')
             self.direccionPartida = vals.get('direccionPartida', '')[:100]
-            
+            self.codSucursalPartida = vals.get("codSucursalPartida", '')
+            self.rucPartida = vals.get("rucPartida", "")
+
             # Puerto o Aeropuerto de embarque/desembarque
             self.puerto = vals.get("puerto", "")
             
