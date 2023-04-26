@@ -379,7 +379,7 @@ class Ubl21:
                                  nsmap={'cbc': tag.namespace}).text = relacionado.numero
                 tag = etree.QName(self._cbc, 'DocumentTypeCode')
                 etree.SubElement(additional, tag.text, listAgencyName="PE:SUNAT",
-                                 listName="Documento relacionado",
+                                 listName="Documento Relacionado",
                                  listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo12",
                                  nsmap={'cbc': tag.namespace}).text = relacionado.tipoDocumento
 
