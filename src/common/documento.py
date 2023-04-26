@@ -172,7 +172,8 @@ class Documento:
                         
             for documentoModificado in vals.get('documentosModificados', []):
                 self.documentosModificados.add(DocumentoRelacionado(documentoModificado.get('numero',''), documentoModificado.get('tipoDocumento')))
-            
+            for documentoModificado in vals.get('documentosRelacionados', []):
+                self.documentosRelacionados.add(DocumentoRelacionado(documentoModificado.get('numero',''), documentoModificado.get('tipoDocumento')))
             self.totalTributos = round(vals.get('totalTributos', 0.0), 2)
             
             for tributo in vals.get('tributos', []):

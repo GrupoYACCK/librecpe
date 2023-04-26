@@ -370,6 +370,19 @@ class Ubl21:
                                      schemeURI='urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06',
                                      nsmap={'cbc': tag.namespace}).text = relacionado.emisor.numDocumento
 
+        elif self.documento.tipoDocumento in ['01', '03']:
+            for relacionado in self.documento.documentosRelacionados:
+                tag = etree.QName(self._cac, 'AdditionalDocumentReference')
+                additional = etree.SubElement(self._root, tag.text, nsmap={'cac': tag.namespace})
+                tag = etree.QName(self._cbc, 'ID')
+                etree.SubElement(additional, tag.text,
+                                 nsmap={'cbc': tag.namespace}).text = relacionado.numero
+                tag = etree.QName(self._cbc, 'DocumentTypeCode')
+                etree.SubElement(additional, tag.text, listAgencyName="PE:SUNAT",
+                                 listName="Documento relacionado",
+                                 listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo12",
+                                 nsmap={'cbc': tag.namespace}).text = relacionado.tipoDocumento
+
     def _getAnticipos(self):
         if self.documento.tipoDocumento in ['01', '03']:
             i = 1
@@ -659,6 +672,7 @@ class Ubl21:
         self._getX509Template()
         self._getUbl()
         self._getDocumento()
+        self._getDocumentoRelacionado()
         self._getAnticipos()
         if self.documento.tipoDocumento in ['07', '08']:
             self._getMotivoNota()
@@ -670,7 +684,6 @@ class Ubl21:
         self._getMedioPago()
         if self.documento.tipoDocumento in ['01', '03']:
             self._getMontoAnticipos()
-        self._getDocumentoRelacionado()
         self._getRetencion()
         self._getCargoDescuentos(self._root, self.documento.cargoDescuentos)
         self._getTributos(self._root, self.documento.totalTributos)
