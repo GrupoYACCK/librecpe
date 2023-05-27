@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
 from io import BytesIO
+import io
 import zipfile
 import base64
-from pysimplesoap.client import SoapClient, SoapFault
+
+#from pysimplesoap.client import SoapClient, SoapFault
+
+from zeep.wsse.username import UsernameToken
+from zeep import Client, Settings
+from zeep.transports import Transport
+
+
 from lxml import etree
 import logging
 import requests
@@ -53,6 +61,7 @@ class Cliente(object):
         else:
             self._zip_file = base64.b64encode(self.in_memory_data.getvalue())
             self._response_status, self._response = self._client.send_summary(self._zip_filename, self._zip_file)
+
 
     def procesarRespuesta(self):
         if not self._response:
@@ -195,7 +204,62 @@ class ClienteCpe(object):
             self._username = "%s%s" % (ruc, servidor.usuario)
             self._password = servidor.clave
             self._version = 'v1'
+            self._url2 = io.BytesIO(b'''
+            <wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap11="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:wsp="http://www.w3.org/ns/ws-policy" xmlns:wsp200409="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:wsp200607="http://www.w3.org/2006/07/ws-policy" xmlns:ns0="http://service.gem.factura.comppago.registro.servicio.sunat.gob.pe/" xmlns:ns1="http://service.sunat.gob.pe" xmlns:ns2="http://www.datapower.com/extensions/http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="http://service.gem.factura.comppago.registro.servicio.sunat.gob.pe/">
+            <wsdl:import location="https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?ns1.wsdl" namespace="http://service.sunat.gob.pe"/>
+            <wsdl:binding name="BillServicePortBinding" type="ns1:billService">
+                <soap11:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+                <wsdl:operation name="getStatus">
+                <soap11:operation soapAction="urn:getStatus" style="document"/>
+                <wsdl:input name="getStatusRequest">
+                    <soap11:body use="literal"/>
+                </wsdl:input>
+                <wsdl:output name="getStatusResponse">
+                    <soap11:body use="literal"/>
+                </wsdl:output>
+                </wsdl:operation>
+                <wsdl:operation name="sendBill">
+                <soap11:operation soapAction="urn:sendBill" style="document"/>
+                <wsdl:input name="sendBillRequest">
+                    <soap11:body use="literal"/>
+                </wsdl:input>
+                <wsdl:output name="sendBillResponse">
+                    <soap11:body use="literal"/>
+                </wsdl:output>
+                </wsdl:operation>
+                <wsdl:operation name="sendPack">
+                <soap11:operation soapAction="urn:sendPack" style="document"/>
+                <wsdl:input name="sendPackRequest">
+                    <soap11:body use="literal"/>
+                </wsdl:input>
+                <wsdl:output name="sendPackResponse">
+                    <soap11:body use="literal"/>
+                </wsdl:output>
+                </wsdl:operation>
+                <wsdl:operation name="sendSummary">
+                <soap11:operation soapAction="urn:sendSummary" style="document"/>
+                <wsdl:input name="sendSummaryRequest">
+                    <soap11:body use="literal"/>
+                </wsdl:input>
+                <wsdl:output name="sendSummaryResponse">
+                    <soap11:body use="literal"/>
+                </wsdl:output>
+                </wsdl:operation>
+            </wsdl:binding>
+            <wsdl:service name="billService">
+                <wsdl:port name="BillServicePort" binding="ns0:BillServicePortBinding">
+                <soap11:address location="https://e-factura.sunat.gob.pe:443/ol-ti-itcpfegem/billService"/>
+                </wsdl:port>
+                <wsdl:port name="BillServicePort.0" binding="ns2:BillServicePortBinding">
+                <soap12:address location="https://e-factura.sunat.gob.pe:443/ol-ti-itcpfegem/billService"/>
+                </wsdl:port>
+                <wsdl:port name="BillServicePort.3" binding="ns0:BillServicePortBinding">
+                <soap11:address location="https://e-factura.sunat.gob.pe:443/ol-ti-itcpfegem/billService"/>
+                </wsdl:port>
+            </wsdl:service>
+            </wsdl:definitions>''')
             self._url = servidor.url
+
             self._api_id = servidor.idCliente
             self._api_clave = servidor.claveCliente
             if tipo != 'guia':
@@ -226,6 +290,44 @@ class ClienteCpe(object):
             return False, {'error': response.text}
 
     @staticmethod
+    def _process_soap_response(soap_response):
+        if not soap_response:
+            return {}
+        response_tree = etree.fromstring(soap_response)
+        if response_tree.find('.//{*}Fault') is not None:
+            message_element = cdr_tree.find('.//{*}message')
+            code_element = cdr_tree.find('.//{*}faultcode')
+            code = False
+            message_element = cdr_tree.find('.//{*}faultstring')
+            code_element = cdr_tree.find('.//{*}faultcode')
+            code = False
+            if code_element is not None:  # faultcode is only when it is errored
+                code_parsed = code_element.text.split('.')
+                if len(code_parsed) == 2:  # Coming from SUNAT: "soap-env:Client.2800"
+                    code = code_parsed[1]
+            message = message_element.text
+            return {'faultcode': code, 'faultstring': message}
+        if response_tree.find('.//{*}sendBillResponse') is not None:
+            cdr_b64 = response_tree.find('.//{*}applicationResponse').text
+            return {'applicationResponse': cdr_b64}
+        if response_tree.find('.//{*}getStatusResponse') is not None:
+            cdr_b64 = response_tree.find('.//{*}content').text
+            return {'status': {'content': cdr_b64}}
+        if response_tree.find('.//{*}sendSummaryResponse') is not None:
+            ticket = response_tree.find('.//{*}ticket').text
+            return {'ticket': ticket}
+        if response_tree.find('.//{*}getStatusCdrResponse') is not None:
+            code = response_tree.find('.//{*}statusCode').text
+            message = response_tree.find('.//{*}statusMessage').text
+            if response_tree.find('.//{*}content') is not None:
+                cdr_b64 = response_tree.find('.//{*}content').text
+                return {'statusCdr': {'content': cdr_b64}}
+            else:
+                return {'faultcode': code, 'faultstring': message}
+
+        return {}
+
+    @staticmethod
     def _get_header(token):
         headers = {}
         headers['Authorization'] = "Bearer %s" % token
@@ -252,16 +354,20 @@ class ClienteCpe(object):
     def _connect(self):
         if self.tipo != 'guia':
             try:
-                self._client = SoapClient(wsdl=self._url, cache=None, ns='tzmed', soap_ns='soapenv',
-                                          soap_server="jbossas6",
-                                          trace=True)  # SoapClient(location=self._location, action= self._soapaction, namespace=self._namespace)
-                self._client['wsse:Security'] = {
-                    'wsse:UsernameToken': {
-                        'wsse:Username': self._username,
-                        'wsse:Password': self._password
-                    }
-                }
-            except Exception:
+                # self._client = SoapClient(wsdl=self._url, cache=None, ns='tzmed', soap_ns='soapenv',
+                #                           soap_server="jbossas6",
+                #                           trace=True)  # SoapClient(location=self._location, action= self._soapaction, namespace=self._namespace)
+                # self._client['wsse:Security'] = {
+                #     'wsse:UsernameToken': {
+                #         'wsse:Username': self._username,
+                #         'wsse:Password': self._password
+                #     }
+                # }
+                settings = Settings(raw_response=True)
+                transport = Transport(operation_timeout=15, timeout=15)
+                client = Client(wsdl=self._url, wsse=UsernameToken(self._username, self._password),  settings=settings, transport=transport)
+                self._client = client.service
+            except Exception as e:
                 self._client = False
 
     def _call_service(self, name, params):
@@ -285,12 +391,21 @@ class ClienteCpe(object):
 
         try:
             service = getattr(self._client, name)
-            return True, service(**params)
-        except SoapFault as ex:
-            # self.faultcode = faultcode
-            # self.faultstring = faultstring
-            # self.detail = detail
-            return False, {'faultcode': ex.faultcode, 'faultstring': ex.faultstring}
+            result = service(**params)
+            result.raise_for_status()
+            log.info(result.content)
+            response = self._process_soap_response(result.content)
+            if response:
+                if response.get('faultstring'):
+                    return False, response
+                return True, response
+            else:
+                return False, response
+        # except SoapFault as ex:
+        #     # self.faultcode = faultcode
+        #     # self.faultstring = faultstring
+        #     # self.detail = detail
+        #     return False, {'faultcode': ex.faultcode, 'faultstring': ex.faultstring}
         except Exception as e:
             return False, {}
 
@@ -307,7 +422,7 @@ class ClienteCpe(object):
         else:
             params = {
                 'fileName': filename,
-                'contentFile': str(content_file, 'utf-8')
+                'contentFile': base64.decodebytes(content_file)
             }
 
         return self._call_service('sendBill', params)
@@ -315,7 +430,7 @@ class ClienteCpe(object):
     def send_summary(self, filename, content_file):
         params = {
             'fileName': filename,
-            'contentFile': str(content_file, 'utf-8')
+            'contentFile': base64.decodebytes(content_file)
         }
         return self._call_service('sendSummary', params)
 
