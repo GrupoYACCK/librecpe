@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from io import BytesIO
-import io
 import zipfile
 import base64
 
@@ -204,7 +203,7 @@ class ClienteCpe(object):
             self._username = "%s%s" % (ruc, servidor.usuario)
             self._password = servidor.clave
             self._version = 'v1'
-            self._url2 = io.BytesIO(b'''
+            self._url2 = BytesIO(b'''
             <wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap11="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:wsp="http://www.w3.org/ns/ws-policy" xmlns:wsp200409="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:wsp200607="http://www.w3.org/2006/07/ws-policy" xmlns:ns0="http://service.gem.factura.comppago.registro.servicio.sunat.gob.pe/" xmlns:ns1="http://service.sunat.gob.pe" xmlns:ns2="http://www.datapower.com/extensions/http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="http://service.gem.factura.comppago.registro.servicio.sunat.gob.pe/">
             <wsdl:import location="https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?ns1.wsdl" namespace="http://service.sunat.gob.pe"/>
             <wsdl:binding name="BillServicePortBinding" type="ns1:billService">
@@ -295,24 +294,21 @@ class ClienteCpe(object):
             return {}
         response_tree = etree.fromstring(soap_response)
         if response_tree.find('.//{*}Fault') is not None:
-            message_element = cdr_tree.find('.//{*}message')
-            code_element = cdr_tree.find('.//{*}faultcode')
+            message_element = response_tree.find('.//{*}faultstring')
+            code_element = response_tree.find('.//{*}faultcode')
             code = False
-            message_element = cdr_tree.find('.//{*}faultstring')
-            code_element = cdr_tree.find('.//{*}faultcode')
-            code = False
-            if code_element is not None:  # faultcode is only when it is errored
+            if code_element is not None:
                 code_parsed = code_element.text.split('.')
-                if len(code_parsed) == 2:  # Coming from SUNAT: "soap-env:Client.2800"
-                    code = code_parsed[1]
+                if code_parsed:
+                    code = code_parsed[-1]
             message = message_element.text
             return {'faultcode': code, 'faultstring': message}
         if response_tree.find('.//{*}sendBillResponse') is not None:
-            cdr_b64 = response_tree.find('.//{*}applicationResponse').text
-            return {'applicationResponse': cdr_b64}
+            applicationResponse = response_tree.find('.//{*}applicationResponse').text
+            return {'applicationResponse': applicationResponse}
         if response_tree.find('.//{*}getStatusResponse') is not None:
-            cdr_b64 = response_tree.find('.//{*}content').text
-            return {'status': {'content': cdr_b64}}
+            content = response_tree.find('.//{*}content').text
+            return {'status': {'content': content}}
         if response_tree.find('.//{*}sendSummaryResponse') is not None:
             ticket = response_tree.find('.//{*}ticket').text
             return {'ticket': ticket}
@@ -320,8 +316,8 @@ class ClienteCpe(object):
             code = response_tree.find('.//{*}statusCode').text
             message = response_tree.find('.//{*}statusMessage').text
             if response_tree.find('.//{*}content') is not None:
-                cdr_b64 = response_tree.find('.//{*}content').text
-                return {'statusCdr': {'content': cdr_b64}}
+                content = response_tree.find('.//{*}content').text
+                return {'statusCdr': {'content': content}}
             else:
                 return {'faultcode': code, 'faultstring': message}
 
@@ -432,6 +428,15 @@ class ClienteCpe(object):
             'fileName': filename,
             'contentFile': base64.decodebytes(content_file)
         }
+        if not self._client:
+            try:
+                settings = Settings(raw_response=True)
+                transport = Transport(operation_timeout=15, timeout=15)
+                client = Client(wsdl=self._url2, wsse=UsernameToken(self._username, self._password), settings=settings,
+                                transport=transport)
+                self._client = client.service
+            except Exception as e:
+                self._client = False
         return self._call_service('sendSummary', params)
 
     def get_status(self, ticket_code):
