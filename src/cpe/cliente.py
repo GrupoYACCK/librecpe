@@ -420,7 +420,15 @@ class ClienteCpe(object):
                 'fileName': filename,
                 'contentFile': base64.decodebytes(content_file)
             }
-
+        if not self._client:
+            try:
+                settings = Settings(raw_response=True)
+                transport = Transport(operation_timeout=15, timeout=15)
+                client = Client(wsdl=self._url2, wsse=UsernameToken(self._username, self._password), settings=settings,
+                                transport=transport)
+                self._client = client.service
+            except Exception as e:
+                self._client = False
         return self._call_service('sendBill', params)
 
     def send_summary(self, filename, content_file):
