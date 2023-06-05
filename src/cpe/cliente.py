@@ -360,7 +360,7 @@ class ClienteCpe(object):
                 #     }
                 # }
                 settings = Settings(raw_response=True)
-                transport = Transport(operation_timeout=15, timeout=15)
+                transport = Transport(operation_timeout=300, timeout=300)
                 client = Client(wsdl=self._url, wsse=UsernameToken(self._username, self._password),  settings=settings, transport=transport)
                 self._client = client.service
             except Exception as e:
@@ -431,7 +431,7 @@ class ClienteCpe(object):
         if not self._client:
             try:
                 settings = Settings(raw_response=True)
-                transport = Transport(operation_timeout=15, timeout=15)
+                transport = Transport(operation_timeout=300, timeout=300)
                 client = Client(wsdl=self._url2, wsse=UsernameToken(self._username, self._password), settings=settings,
                                 transport=transport)
                 self._client = client.service
@@ -447,7 +447,7 @@ class ClienteCpe(object):
             if not self._client:
                 try:
                     settings = Settings(raw_response=True)
-                    transport = Transport(operation_timeout=30, timeout=30)
+                    transport = Transport(operation_timeout=300, timeout=300)
                     client = Client(wsdl=self._url2, wsse=UsernameToken(self._username, self._password),
                                     settings=settings,
                                     transport=transport)
