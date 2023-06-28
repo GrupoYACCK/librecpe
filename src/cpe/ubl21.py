@@ -831,6 +831,7 @@ class Ubl21:
                 tag = etree.QName(self._cbc, 'JobTitle')
                 if principal:
                     etree.SubElement(customer, tag.text, nsmap={'cbc': tag.namespace}).text = 'Principal'
+                    principal = False
                 else:
                     etree.SubElement(customer, tag.text, nsmap={'cbc': tag.namespace}).text = 'Secundario'
                 if transportista.licencia:
