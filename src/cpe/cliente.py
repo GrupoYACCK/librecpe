@@ -62,6 +62,15 @@ class Cliente(object):
             self._zip_file = base64.b64encode(self.in_memory_data.getvalue())
             self._response_status, self._response = self._client.send_summary(self._zip_filename, self._zip_file)
 
+    def generarHashqr(self, document_name=None, xml=None):
+        if document_name:
+            self._document_name = document_name
+        if xml:
+            self._xml = xml
+        if not self.in_memory_data:
+            self.preparaZip()
+        hashqr = hashlib.sha256(self.in_memory_data.getvalue()).hexdigest()
+        return hashqr
 
     def procesarRespuesta(self):
         if not self._response:

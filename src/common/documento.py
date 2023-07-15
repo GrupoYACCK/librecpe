@@ -250,7 +250,7 @@ class Documento:
             for detalle in vals.get('detalles', []):
                 self.detalles.add(DetalleBienes(detalle))
 
-    def getDocumento(self, key=None, cer=None, xml=None):
+    def getDocumento(self, key=None, cer=None, xml=None, nombre_documento=None):
         vals = {}
         if self.servidor in ['SUNAT']:
             if not key:
@@ -266,6 +266,9 @@ class Documento:
             vals['xml_firmado'] = encodebytes(xml_firmado)
             vals['resumen'] = resumen
             vals['firma'] = firma
+            if nombre_documento:
+                cliente = Cliente()
+                vals['hashqr'] = cliente.generarHashqr(nombre_documento, xml)
         return vals
     
     def enviarDocumento(self, servidor, nombre_documento=None, tipo=None, xml=None):
