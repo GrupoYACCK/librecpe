@@ -5,7 +5,8 @@ class Servidor:
         self.servidores = {
             'sunat':'SUNAT',
             'nubefact_pse':'NubeFact PSE',
-            'nubefact_ose':'NubeFact OSE'
+            'nubefact_ose':'NubeFact OSE',
+            'otros':'Otros'
         }
         self.webservices = {
             'sunat' : {
@@ -42,4 +43,5 @@ class Servidor:
         self.clave = vals.get('clave', '')
         self.idCliente = vals.get('idCliente', '')
         self.claveCliente = vals.get('claveCliente', '')
+        self.clientePython = vals.get('clientePython', 'pysimplesoap')
         return self

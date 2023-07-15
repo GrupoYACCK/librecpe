@@ -9,7 +9,7 @@ import base64
 from zeep.wsse.username import UsernameToken
 from zeep import Client, Settings
 from zeep.transports import Transport
-
+from pysimplesoap.client import SoapClient, SoapFault
 
 from lxml import etree
 import logging
@@ -201,7 +201,10 @@ class ClienteCpe(object):
         self.servidor = servidor
         self.tipo = tipo
         if servidor:
-            self._username = "%s%s" % (ruc, servidor.usuario)
+            if servidor.servidor in ['sunat', 'nubefact_ose']:
+                self._username = "%s%s" % (ruc, servidor.usuario)
+            else:
+                self._username = servidor.usuario
             self._password = servidor.clave
             self._version = 'v1'
             self._url2 = io.BytesIO(b'''
@@ -259,7 +262,7 @@ class ClienteCpe(object):
             </wsdl:service>
             </wsdl:definitions>''')
             self._url = servidor.url
-
+            self._clientePython = servidor.clientePython
             self._api_id = servidor.idCliente
             self._api_clave = servidor.claveCliente
             if tipo != 'guia':
@@ -353,21 +356,28 @@ class ClienteCpe(object):
 
     def _connect(self):
         if self.tipo != 'guia':
-            try:
-                # self._client = SoapClient(wsdl=self._url, cache=None, ns='tzmed', soap_ns='soapenv',
-                #                           soap_server="jbossas6",
-                #                           trace=True)  # SoapClient(location=self._location, action= self._soapaction, namespace=self._namespace)
-                # self._client['wsse:Security'] = {
-                #     'wsse:UsernameToken': {
-                #         'wsse:Username': self._username,
-                #         'wsse:Password': self._password
-                #     }
-                # }
-                settings = Settings(raw_response=True)
-                transport = Transport(operation_timeout=15, timeout=15)
-                client = Client(wsdl=self._url, wsse=UsernameToken(self._username, self._password),  settings=settings, transport=transport)
-                self._client = client.service
-            except Exception as e:
+            if self._clientePython == 'pysimplesoap':
+                try:
+                    self._client = SoapClient(wsdl=self._url, cache=None, ns='tzmed', soap_ns='soapenv',
+                                              soap_server="jbossas6",
+                                              trace=True)  # SoapClient(location=self._location, action= self._soapaction, namespace=self._namespace)
+                    self._client['wsse:Security'] = {
+                        'wsse:UsernameToken': {
+                            'wsse:Username': self._username,
+                            'wsse:Password': self._password
+                        }
+                    }
+                except Exception:
+                    self._client = False
+            elif self._clientePython == 'zeep':
+                try:
+                    settings = Settings(raw_response=True)
+                    transport = Transport(operation_timeout=15, timeout=15)
+                    client = Client(wsdl=self._url, wsse=UsernameToken(self._username, self._password),  settings=settings, transport=transport)
+                    self._client = client.service
+                except Exception as e:
+                    self._client = False
+            else:
                 self._client = False
 
     def _call_service(self, name, params):
@@ -388,26 +398,29 @@ class ClienteCpe(object):
                 return False, {}
         if not self._client:
             return False, {}
-
-        try:
-            service = getattr(self._client, name)
-            result = service(**params)
-            result.raise_for_status()
-            log.info(result.content)
-            response = self._process_soap_response(result.content)
-            if response:
-                if response.get('faultstring'):
+        if self._clientePython == 'pysimplesoap':
+            try:
+                service = getattr(self._client, name)
+                return True, service(**params)
+            except SoapFault as ex:
+                return False, {'faultcode': ex.faultcode, 'faultstring': ex.faultstring}
+            except Exception as e:
+                return False, {}
+        elif self._clientePython == 'zeep':
+            try:
+                service = getattr(self._client, name)
+                result = service(**params)
+                result.raise_for_status()
+                log.info(result.content)
+                response = self._process_soap_response(result.content)
+                if response:
+                    if response.get('faultstring'):
+                        return False, response
+                    return True, response
+                else:
                     return False, response
-                return True, response
-            else:
-                return False, response
-        # except SoapFault as ex:
-        #     # self.faultcode = faultcode
-        #     # self.faultstring = faultstring
-        #     # self.detail = detail
-        #     return False, {'faultcode': ex.faultcode, 'faultstring': ex.faultstring}
-        except Exception as e:
-            return False, {}
+            except Exception as e:
+                return False, {}
 
     def send_bill(self, filename, content_file, hash=None):
         if self.tipo == 'guia':
