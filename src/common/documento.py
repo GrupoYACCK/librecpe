@@ -198,7 +198,8 @@ class Documento:
             for anulado in vals.get('documentosAnulados',[]):
                 self.documentosAnulados.add(DocumentoAnulado(**anulado))
             for documentoModificado in vals.get('documentosRelacionados', []):
-                self.documentosRelacionados.add(DocumentoRelacionado(documentoModificado.get('numero',''), documentoModificado.get('tipoDocumento')))            
+                self.documentosRelacionados.add(DocumentoRelacionado(documentoModificado.get('numero',''), documentoModificado.get('tipoDocumento'),
+                                                                     documentoModificado.get('emisor', {})))
             self.remitente = Adquirente(vals.get('remitente', {}))
             self.destinatario = Adquirente(vals.get('destinatario', {}))
             self.establecimientoTercero = vals.get('establecimientoTercero', {}) and Adquirente(vals.get('establecimientoTercero', {})) or vals.get('establecimientoTercero', {})
@@ -346,10 +347,10 @@ class DocumentoRelacionado:
     def __init__(self, numero='', tipoDocumento='', emisor=set()):
         self.tipoDocumento = tipoDocumento
         self.numero = numero
-        self.emisor = emisor
+        self.emisor = emisor and Emisor(emisor) or set()
 
 class Detalle:
-    
+
     def __init__(self, vals={}):
         self.codUnidadMedida = vals.get('codUnidadMedida', 'NIU')
         self.cantidad = round(vals.get('cantidad', 0.0), 10)
