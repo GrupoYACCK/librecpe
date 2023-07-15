@@ -214,8 +214,8 @@ class Ubl21:
                 i += 1
 
     def _getEmisor(self):
-        emisor = self.documento.emisor
         if self.documento.tipoDocumento in ['09']:
+            emisor = self.documento.remitente
             tag = etree.QName(self._cac, 'DespatchSupplierParty')
             supplier = etree.SubElement(self._root, tag.text, nsmap={'cac': tag.namespace})
             tag = etree.QName(self._cbc, 'CustomerAssignedAccountID')
@@ -236,6 +236,7 @@ class Ubl21:
             tag = etree.QName(self._cbc, 'RegistrationName')
             etree.SubElement(party_name, tag.text, nsmap={'cbc': tag.namespace}).text = etree.CDATA(emisor.nombre)
         else:
+            emisor = self.documento.emisor
             supplier = etree.SubElement(self._root, "{%s}%s" % (self._cac, 'AccountingSupplierParty'),
                                         nsmap={'cac': self._cac})
             party = etree.SubElement(supplier, "{%s}%s" % (self._cac, 'Party'), nsmap={'cac': self._cac})

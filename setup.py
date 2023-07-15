@@ -13,7 +13,7 @@ PACKAGE_DIR = 'src'
 
 setup(
     name=PACKAGE_NAME,
-    version='0.0.39',
+    version='0.0.40',
     author='Alex Cuellar',
     author_email='acuellar@grupoyacck.com',
     maintainer='Alex Cuellar',
@@ -39,5 +39,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ]
 )

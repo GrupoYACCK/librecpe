@@ -295,11 +295,11 @@ class ClienteCpe(object):
             return {}
         response_tree = etree.fromstring(soap_response)
         if response_tree.find('.//{*}Fault') is not None:
-            message_element = cdr_tree.find('.//{*}message')
-            code_element = cdr_tree.find('.//{*}faultcode')
-            code = False
-            message_element = cdr_tree.find('.//{*}faultstring')
-            code_element = cdr_tree.find('.//{*}faultcode')
+            # message_element = response_tree.find('.//{*}message')
+            # code_element = response_tree.find('.//{*}faultcode')
+            # code = False
+            message_element = response_tree.find('.//{*}faultstring')
+            code_element = response_tree.find('.//{*}faultcode')
             code = False
             if code_element is not None:  # faultcode is only when it is errored
                 code_parsed = code_element.text.split('.')
