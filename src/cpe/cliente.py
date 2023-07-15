@@ -435,7 +435,7 @@ class ClienteCpe(object):
         else:
             params = {
                 'fileName': filename,
-                'contentFile': base64.decodebytes(content_file)
+                'contentFile': self._clientePython == 'zeep' and base64.decodebytes(content_file) or str(content_file, 'utf-8')
             }
             if self._clientePython == 'zeep' and not self._client:
                 try:
@@ -452,7 +452,7 @@ class ClienteCpe(object):
     def send_summary(self, filename, content_file):
         params = {
             'fileName': filename,
-            'contentFile': base64.decodebytes(content_file)
+            'contentFile': self._clientePython == 'zeep' and base64.decodebytes(content_file) or str(content_file, 'utf-8')
         }
         if self._clientePython == 'zeep' and not self._client:
             try:
