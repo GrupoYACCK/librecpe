@@ -80,36 +80,36 @@ class Cliente(object):
             self._response_data = self._response['applicationResponse']
             try:
                 xml_filename = 'R-%s.xml' % (self._document_name)
-                codigo, descripcion, respuesta, nota = self.obtenerRespuesta(self._response_data, xml_filename)
+                codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(self._response_data, xml_filename)
                 self._sunat_response.update(
-                    {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota})
+                    {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota, 'documento': documento})
             except Exception:
                 pass
         elif self._response.get('status', {}).get('content'):
             self._response_data = self._response['status']['content']
             try:
                 xml_filename = 'R-%s.xml' % (self._document_name)
-                codigo, descripcion, respuesta, nota = self.obtenerRespuesta(self._response_data, xml_filename)
+                codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(self._response_data, xml_filename)
                 self._sunat_response.update(
-                    {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota})
+                    {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota, 'documento': documento})
             except Exception:
                 pass
         elif self._response.get('statusCdr', {}).get('content', None):
             self._response_data = self._response.get('statusCdr', {}).get('content', None)
             try:
                 xml_filename = 'R-%s.xml' % (self._document_name)
-                codigo, descripcion, respuesta, nota = self.obtenerRespuesta(self._response_data, xml_filename)
+                codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(self._response_data, xml_filename)
                 self._sunat_response.update(
-                    {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota})
+                    {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota, 'documento': documento})
             except Exception:
                 pass
         elif self._response.get('arcCdr'):
             self._response_data = self._response.get('arcCdr')
             try:
                 xml_filename = 'R-%s.xml' % (self._document_name)
-                codigo, descripcion, respuesta, nota = self.obtenerRespuesta(self._response_data, xml_filename)
+                codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(self._response_data, xml_filename)
                 self._sunat_response.update(
-                    {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota})
+                    {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota, 'documento':documento})
             except Exception:
                 pass
         elif self._response.get('ticket'):
@@ -152,8 +152,9 @@ class Cliente(object):
         description = res.get('descripcion')
         response = res.get('respuesta')
         note = res.get('nota')
+        document_desc = res.get('documento_desc')
         zf.close()
-        return res_code, description, response, note
+        return res_code, description, response, note, document_desc
 
     @staticmethod
     def obtenerRespuestaXML(xml):
@@ -179,11 +180,16 @@ class Cliente(object):
         notes = sunat_response.xpath(".//cbc:Note", namespaces={
             'cbc': 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'})
         res_note = ""
+        tag = etree.QName(cbc, 'DocumentDescription')
+        documento = sunat_response.find('.//' + tag.text)
+        documento_desc = ""
+        if documento != -1:
+            documento_desc = documento.text
         for note in notes:
             res_note += note.text + "\n"
         note = res_note
 
-        return {'codigo': res_code, 'descripcion': description, 'respuesta': response, 'nota': note}
+        return {'codigo': res_code, 'descripcion': description, 'respuesta': response, 'nota': note, 'documento_desc': documento_desc}
 
     def get_status(self, document_name, type, client, ticket=None):
         # self._type="ticket"

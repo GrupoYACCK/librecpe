@@ -241,8 +241,8 @@ class Documento:
 
     def obtenerRespuesta(self, file, name):
         cliente = Cliente()
-        codigo, descripcion, respuesta, nota = cliente.obtenerRespuesta(file, name)
-        return {'codigo': codigo, 'descripcion': descripcion, 'respuesta':respuesta, 'nota': nota}
+        codigo, descripcion, respuesta, nota, documento = cliente.obtenerRespuesta(file, name)
+        return {'codigo': codigo, 'descripcion': descripcion, 'respuesta':respuesta, 'nota': nota, 'documento':documento}
 
 class DetalleBienes:
     
