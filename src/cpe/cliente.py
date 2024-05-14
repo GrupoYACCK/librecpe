@@ -183,13 +183,16 @@ class Cliente(object):
         tag = etree.QName(cbc, 'DocumentDescription')
         documento = sunat_response.find('.//' + tag.text)
         documento_desc = ""
-        if documento != -1:
-            documento_desc = documento.text
+        if documento != -1 or documento is not None:
+            try:
+                documento_desc = documento.text
+            except Exception:
+                pass
         for note in notes:
             res_note += note.text + "\n"
         note = res_note
 
-        return {'codigo': res_code, 'descripcion': description, 'respuesta': response, 'nota': note, 'documento_desc': documento_desc}
+        return {'codigo': res_code, 'descripcion': res_desc, 'respuesta': response, 'nota': note, 'documento_desc': documento_desc}
 
     def get_status(self, document_name, type, client, ticket=None):
         # self._type="ticket"
