@@ -63,6 +63,7 @@ class Documento:
         self.vehiculoM1L = False
 
         self.pesoBruto = 0.0
+        self.pesoBrutoUnidad = 'KGM'
         self.bultos = 0.0
         
         self.modoTraslado = ""
@@ -211,6 +212,7 @@ class Documento:
             self.transbordo = vals.get('transbordo', False)
             self.vehiculoM1L = vals.get('vehiculoM1L', False)
             self.pesoBruto = vals.get('pesoBruto', 0.0)
+            self.pesoBrutoUnidad = vals.get('pesoBrutoUnidad', 'KGM')
             self.bultos = vals.get('bultos', 0.0)
             self.modoTraslado = vals.get('modoTraslado', "")
             self.fechaTraslado = vals.get('fechaTraslado', "")

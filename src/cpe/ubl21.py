@@ -758,7 +758,7 @@ class Ubl21:
            etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = etree.CDATA(
                self.documento.descripcion)
         tag = etree.QName(self._cbc, 'GrossWeightMeasure')
-        etree.SubElement(shipment, tag.text, unitCode="KGM",
+        etree.SubElement(shipment, tag.text, unitCode=self.documento.pesoBrutoUnidad or "KGM",
                          nsmap={'cbc': tag.namespace}).text = str(self.documento.pesoBruto)
         if self.documento.motivo == '08':
             tag = etree.QName(self._cbc, 'TotalTransportHandlingUnitQuantity')

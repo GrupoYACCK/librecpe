@@ -13,7 +13,7 @@ PACKAGE_DIR = 'src'
 
 setup(
     name=PACKAGE_NAME,
-    version='1.0.11',
+    version='1.0.12',
     author='Alex Cuellar',
     author_email='acuellar@grupoyacck.com',
     maintainer='Alex Cuellar',
@@ -24,7 +24,7 @@ setup(
     long_description=LONG_DESC,
     license='GPLv3',
     keywords='librecpe',
-    url='',
+    url='https://github.com/GrupoYACCK/librecpe/',
     packages=[PACKAGE_NAME,"%s.common"%PACKAGE_NAME,
               "%s.cpe"%PACKAGE_NAME, "%s.nubefact"%PACKAGE_NAME],
     package_dir={PACKAGE_NAME: PACKAGE_DIR},
