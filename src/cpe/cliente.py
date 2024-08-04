@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 from io import BytesIO
 import io
 import zipfile
@@ -325,6 +326,8 @@ class ClienteCpe(object):
                 if code_parsed:
                     code = code_parsed[-1]
             message = message_element.text
+            if re.findall(r'\d+', message or '') and not re.findall(r'\d+', code or ''):
+                code = message
             return {'faultcode': code, 'faultstring': message}
         if response_tree.find('.//{*}sendBillResponse') is not None:
             applicationResponse = response_tree.find('.//{*}applicationResponse').text
@@ -428,7 +431,7 @@ class ClienteCpe(object):
             try:
                 service = getattr(self._client, name)
                 result = service(**params)
-                result.raise_for_status()
+                # result.raise_for_status()
                 log.info(result.content)
                 response = self._process_soap_response(result.content)
                 if response:
