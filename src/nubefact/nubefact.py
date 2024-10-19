@@ -334,6 +334,7 @@ class NubeFactPSE:
         if self.documento.detraccion:
             vals['detraccion'] = True
             vals['detraccion_tipo'] = data.get('detraccion_tipo', {}).get(self.documento.detraccion.codigo)
+            vals['detraccion_porcentaje'] = self.documento.detraccion.porcentaje
             vals['detraccion_total'] = self.documento.detraccion.monto
         return vals
 
