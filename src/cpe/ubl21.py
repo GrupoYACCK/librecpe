@@ -760,7 +760,7 @@ class Ubl21:
         tag = etree.QName(self._cbc, 'GrossWeightMeasure')
         etree.SubElement(shipment, tag.text, unitCode=self.documento.pesoBrutoUnidad or "KGM",
                          nsmap={'cbc': tag.namespace}).text = str(self.documento.pesoBruto)
-        if self.documento.motivo == '08':
+        if self.documento.motivo in ['08', '09']:
             tag = etree.QName(self._cbc, 'TotalTransportHandlingUnitQuantity')
             etree.SubElement(shipment, tag.text, nsmap={'cbc': tag.namespace}).text = str(self.documento.bultos)
 
