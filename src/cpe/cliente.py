@@ -398,6 +398,18 @@ class ClienteCpe(object):
                     self._client = client.service
                 except Exception as e:
                     self._client = False
+                if not self._client and self.servidor.servidor in ['sunat']:
+                    try:
+                        response = requests.get(self._url)
+                        url = self._url.replace("billService?wsdl", "billService?ns1.wsdl")
+                        wsdl = BytesIO(response.text.replace("billService?ns1.wsdl", url).encode('utf-8'))
+                        settings = Settings(raw_response=True)
+                        transport = Transport(operation_timeout=15, timeout=15)
+                        client = Client(wsdl=wsdl, wsse=UsernameToken(self._username, self._password),
+                                        settings=settings, transport=transport)
+                        self._client = client.service
+                    except Exception as e:
+                        self._client = False
             else:
                 self._client = False
 
