@@ -470,7 +470,7 @@ class ClienteCpe(object):
                 'fileName': filename,
                 'contentFile': self._clientePython == 'zeep' and base64.decodebytes(content_file) or str(content_file, 'utf-8')
             }
-            if self._clientePython == 'zeep' and not self._client:
+            if self._clientePython == 'zeep' and not self._client and self.servidor.servidor in ['sunat']:
                 try:
                     settings = Settings(raw_response=True)
                     transport = Transport(operation_timeout=700, timeout=700)
@@ -487,7 +487,7 @@ class ClienteCpe(object):
             'fileName': filename,
             'contentFile': self._clientePython == 'zeep' and base64.decodebytes(content_file) or str(content_file, 'utf-8')
         }
-        if self._clientePython == 'zeep' and not self._client:
+        if self._clientePython == 'zeep' and not self._client and self.servidor.servidor in ['sunat']:
             try:
                 settings = Settings(raw_response=True)
                 transport = Transport(operation_timeout=700, timeout=700)
@@ -503,7 +503,7 @@ class ClienteCpe(object):
             params = {
                 'ticket': ticket_code
             }
-            if self._clientePython == 'zeep' and not self._client:
+            if self._clientePython == 'zeep' and not self._client and self.servidor.servidor in ['sunat']:
                 try:
                     settings = Settings(raw_response=True)
                     transport = Transport(operation_timeout=700, timeout=700)
