@@ -57,7 +57,7 @@ class LibreCPE:
         if not self.documento and not xml:
             raise LibreCpeError("El Comprobante/Documento no esta definido")
         if not xml:
-            if self.documento.tipoDocumento in ['ra', 'rc']:
+            if self.documento.tipoDocumento in ['ra', 'rc', 'rr', '20']:
                 xml = ubl20.Ubl20(self.documento).getDocumento()
             elif self.documento.tipoDocumento in ['01','03', '07', '08', '09']:
                 xml = ubl21.Ubl21(self.documento).getDocumento()

@@ -117,7 +117,52 @@ class Ubl20:
         etree.SubElement(customer, tag.text, nsmap={'cbc':tag.namespace}).text=adquirente.numDocumento or '0'
         tag = etree.QName(self._cbc, 'AdditionalAccountID')
         etree.SubElement(customer, tag.text, nsmap={'cbc':tag.namespace}).text=adquirente.tipoDocumento or '-'
-    
+
+    def _getRecepetor(self):
+        adquirente = self.documento.adquirente
+        tag = etree.QName(self._cac, 'ReceiverParty')
+        supplier = etree.SubElement(self._root, tag.text, nsmap={'cac': tag.namespace})
+        tag = etree.QName(self._cac, 'PartyIdentification')
+        identification = etree.SubElement(supplier, tag.text, nsmap={'cac': tag.namespace})
+        tag = etree.QName(self._cbc, 'ID')
+        etree.SubElement(identification, tag.text, schemeID=adquirente.tipoDocumento,
+                         nsmap={'cbc': tag.namespace}).text = adquirente.numDocumento
+
+        tag = etree.QName(self._cac, 'PartyName')
+        party_name = etree.SubElement(supplier, tag.text, nsmap={'cac': tag.namespace})
+        tag = etree.QName(self._cbc, 'Name')
+        etree.SubElement(party_name, tag.text, nsmap={'cbc': tag.namespace}).text = etree.CDATA(adquirente.nomComercial)
+
+        tag = etree.QName(self._cac, 'PostalAddress')
+        address = etree.SubElement(supplier, tag.text, nsmap={'cac': tag.namespace})
+
+        tag = etree.QName(self._cbc, 'ID')
+        etree.SubElement(address, tag.text, nsmap={'cbc': tag.namespace}).text = adquirente.ubigeo
+        tag = etree.QName(self._cbc, 'StreetName')
+        etree.SubElement(address, tag.text, nsmap={'cbc': tag.namespace}).text = adquirente.direccion
+        tag = etree.QName(self._cbc, 'CitySubdivisionName')
+        etree.SubElement(address, tag.text, nsmap={'cbc': tag.namespace}).text = adquirente.urbanizacion
+        tag = etree.QName(self._cbc, 'CityName')
+        etree.SubElement(address, tag.text,
+                         nsmap={'cbc': tag.namespace}).text = adquirente.region
+        tag = etree.QName(self._cbc, 'CountrySubentity')
+        etree.SubElement(address, tag.text,
+                         nsmap={'cbc': tag.namespace}).text = adquirente.provincia
+        tag = etree.QName(self._cbc, 'District')
+        etree.SubElement(address, tag.text,
+                         nsmap={'cbc': tag.namespace}).text = adquirente.distrito
+
+        tag = etree.QName(self._cac, 'Country')
+        country = etree.SubElement(address, tag.text, nsmap={'cac': tag.namespace})
+        tag = etree.QName(self._cbc, 'IdentificationCode')
+        etree.SubElement(country, tag.text,
+                         nsmap={'cbc': tag.namespace}).text = adquirente.codPais
+
+        tag = etree.QName(self._cac, 'PartyLegalEntity')
+        entity = etree.SubElement(supplier, tag.text, nsmap={'cac': tag.namespace})
+        tag = etree.QName(self._cbc, 'RegistrationName')
+        etree.SubElement(entity, tag.text, nsmap={'cbc': tag.namespace}).text = etree.CDATA(adquirente.nombre)
+
     def _getTributos(self, root, total, documento = None):
         for tributo in documento.tributos:
             tag = etree.QName(self._cac, 'TaxTotal')   
@@ -244,11 +289,174 @@ class Ubl20:
             tag = etree.QName(self._cbc, 'DocumentTypeCode')   
             etree.SubElement(invoice, tag.text, nsmap={'cbc':tag.namespace}).text=documentoModificado.tipoDocumento
 
+    def _getAgente(self):
+        emisor = self.documento.emisor
+        tag = etree.QName(self._cac, 'AgentParty')
+        supplier = etree.SubElement(self._root, tag.text, nsmap={'cac': tag.namespace})
+        tag = etree.QName(self._cac, 'PartyIdentification')
+        identification = etree.SubElement(supplier, tag.text, nsmap={'cac': tag.namespace})
+        tag = etree.QName(self._cbc, 'ID')
+        etree.SubElement(identification, tag.text, schemeID=emisor.tipoDocumento,
+                         nsmap={'cbc': tag.namespace}).text = emisor.numDocumento
+
+        tag = etree.QName(self._cac, 'PartyName')
+        party_name = etree.SubElement(supplier, tag.text, nsmap={'cac': tag.namespace})
+        tag = etree.QName(self._cbc, 'Name')
+        etree.SubElement(party_name, tag.text, nsmap={'cbc': tag.namespace}).text = etree.CDATA(emisor.nomComercial)
+
+        tag = etree.QName(self._cac, 'PostalAddress')
+        address = etree.SubElement(supplier, tag.text, nsmap={'cac': tag.namespace})
+
+        tag = etree.QName(self._cbc, 'ID')
+        etree.SubElement(address, tag.text, nsmap={'cbc': tag.namespace}).text = emisor.ubigeo
+        tag = etree.QName(self._cbc, 'StreetName')
+        etree.SubElement(address, tag.text, nsmap={'cbc': tag.namespace}).text = emisor.direccion
+        tag = etree.QName(self._cbc, 'CitySubdivisionName')
+        etree.SubElement(address, tag.text, nsmap={'cbc': tag.namespace}).text = emisor.urbanizacion or '-'
+        tag = etree.QName(self._cbc, 'CityName')
+        etree.SubElement(address, tag.text,
+                         nsmap={'cbc': tag.namespace}).text = emisor.region
+        tag = etree.QName(self._cbc, 'CountrySubentity')
+        etree.SubElement(address, tag.text,
+                         nsmap={'cbc': tag.namespace}).text = emisor.provincia
+        tag = etree.QName(self._cbc, 'District')
+        etree.SubElement(address, tag.text,
+                         nsmap={'cbc': tag.namespace}).text = emisor.distrito
+
+        tag = etree.QName(self._cac, 'Country')
+        country = etree.SubElement(address, tag.text, nsmap={'cac': tag.namespace})
+        tag = etree.QName(self._cbc, 'IdentificationCode')
+        etree.SubElement(country, tag.text,
+                         nsmap={'cbc': tag.namespace}).text = emisor.codPais
+
+        tag = etree.QName(self._cac, 'PartyLegalEntity')
+        entity = etree.SubElement(supplier, tag.text, nsmap={'cac': tag.namespace})
+        tag = etree.QName(self._cbc, 'RegistrationName')
+        etree.SubElement(entity, tag.text, nsmap={'cbc': tag.namespace}).text = etree.CDATA(emisor.nombre)
+
+
+    def _getDetalleRetencion(self):
+        for detalle in self.documento.detalles:
+            tag = etree.QName(self._sac, 'SUNATRetentionDocumentReference')
+            inv_line=etree.SubElement(self._root, tag.text, nsmap={'sac':tag.namespace})
+            tag = etree.QName(self._cbc, 'ID')
+            etree.SubElement(inv_line, tag.text, schemeID=detalle.tipoDocumento,  nsmap={'cbc':tag.namespace}).text= detalle.numero
+
+            tag = etree.QName(self._cbc, 'IssueDate')
+            etree.SubElement(inv_line, tag.text, nsmap={'cbc':tag.namespace}).text= detalle.fechaFactura
+            # Importe total documento Relacionado preg.  sobre Operaciones Gravadas?
+            tag = etree.QName(self._cbc, 'TotalInvoiceAmount')
+            etree.SubElement(inv_line, tag.text, currencyID=detalle.monedaFactura,
+                             nsmap={'cbc':tag.namespace}).text=str(detalle.totalFactura)
+            sequence = 1
+            for pago in detalle.pagos:
+                tag = etree.QName(self._cac, 'Payment')
+                payment = etree.SubElement(inv_line, tag.text, nsmap={'cac':tag.namespace})
+                tag = etree.QName(self._cbc, 'ID')
+                etree.SubElement(payment, tag.text, nsmap={'cbc':tag.namespace}).text= str(sequence)
+                sequence+=1
+                tag = etree.QName(self._cbc, 'PaidAmount')
+                etree.SubElement(payment, tag.text, currencyID=pago.moneda,  nsmap={'cbc':tag.namespace}).text= str(pago.monto)
+                tag = etree.QName(self._cbc, 'PaidDate')
+                etree.SubElement(payment, tag.text, nsmap={'cbc':tag.namespace}).text= pago.fecha
+
+            tag = etree.QName(self._sac, 'SUNATRetentionInformation')
+            information = etree.SubElement(inv_line, tag.text, nsmap={'sac':tag.namespace})
+            tag = etree.QName(self._sac, 'SUNATRetentionAmount')
+            etree.SubElement(information, tag.text, currencyID=detalle.monedaRetencion, nsmap={'sac':tag.namespace}).text= str(detalle.totalRetencion)
+            tag = etree.QName(self._sac, 'SUNATRetentionDate')
+            etree.SubElement(information, tag.text, nsmap={'sac':tag.namespace}).text= self.documento.fecEmision.strftime("%Y-%m-%d")
+            tag = etree.QName(self._sac, 'SUNATNetTotalPaid')
+            etree.SubElement(information, tag.text, currencyID=detalle.monedaFactura, nsmap={'sac':tag.namespace}).text=  str(detalle.totalPagoRetencion)
+            for tasa in detalle.tasatasaCambios:
+                tag = etree.QName(self._cac, 'ExchangeRate')
+                exchange = etree.SubElement(information, tag.text, nsmap={'cac':tag.namespace})
+                tag = etree.QName(self._cbc, 'SourceCurrencyCode')
+                etree.SubElement(exchange, tag.text, nsmap={'cbc':tag.namespace}).text= tasa.moneda
+                tag = etree.QName(self._cbc, 'TargetCurrencyCode')
+                etree.SubElement(exchange, tag.text, nsmap={'cbc':tag.namespace}).text= tasa.monedaDestino
+                tag = etree.QName(self._cbc, 'CalculationRate')
+                etree.SubElement(exchange, tag.text, nsmap={'cbc':tag.namespace}).text= str(tasa.tasaCambio)
+                tag = etree.QName(self._cbc, 'Date')
+                etree.SubElement(exchange, tag.text, nsmap={'cbc':tag.namespace}).text= tasa.fecha
+
+    def _getRetencion(self):
+        xmlns = etree.QName("urn:sunat:names:specification:ubl:peru:schema:xsd:Retention-1", 'Retention')
+        nsmap1 = OrderedDict([(None, xmlns.namespace), ('cac', self._cac), ('cbc', self._cbc),
+                              ('ds', self._ds), ('ext', self._ext), ('sac', self._sac)])
+        self._root = etree.Element(xmlns.text, nsmap=nsmap1)
+        self._getX509Template()
+        self._getUbl("1.0")
+        self._getFirma()
+        tag = etree.QName(self._cbc, 'ID')
+        etree.SubElement(self._root, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.numero
+        tag = etree.QName(self._cbc, 'IssueDate')
+        etree.SubElement(self._root, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.fecEmision.strftime("%Y-%m-%d")
+        self._getAgente()
+        self._getRecepetor()
+
+        tag = etree.QName(self._sac, 'SUNATRetentionSystemCode')
+        etree.SubElement(self._root, tag.text, nsmap={'sac': tag.namespace}).text = self.documento.codigoRetencion
+
+        tag = etree.QName(self._sac, 'SUNATRetentionPercent')
+        etree.SubElement(self._root, tag.text, nsmap={'sac': tag.namespace}).text = str(self.documento.porcentajeRetencion)
+
+        if self.documento.notas:
+            tag = etree.QName(self._cbc, 'Note')
+            etree.SubElement(self._root, tag.text, nsmap={'cbc': tag.namespace}).text = etree.CDATA(self.documento.notas)
+
+        tag = etree.QName(self._cbc, 'TotalInvoiceAmount')
+        etree.SubElement(self._root, tag.text, currencyID=self.documento.tipMoneda,
+                         nsmap={'cbc': tag.namespace}).text = str(self.documento.totalRetencion)
+
+        tag = etree.QName(self._sac, 'SUNATTotalPaid')
+        etree.SubElement(self._root, tag.text, currencyID=self.documento.tipMoneda,
+                         nsmap={'sac': tag.namespace}).text = str(self.documento.totalNetoPagado)
+        self._getDetalleRetencion()
+
+    def _anularRetencion(self):
+        xmlns = etree.QName("urn:sunat:names:specification:ubl:peru:schema:xsd:VoidedDocuments-1", 'VoidedDocuments')
+        nsmap1 = OrderedDict([(None, xmlns.namespace), ('cac', self._cac), ('cbc', self._cbc),
+                              ('ds', self._ds), ('ext', self._ext), ('sac', self._sac)])
+        self._root = etree.Element(xmlns.text, nsmap=nsmap1)
+        self._getX509Template()
+        self._getUbl()
+
+        tag = etree.QName(self._cbc, 'ID')
+        etree.SubElement(self._root, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.numero
+        tag = etree.QName(self._cbc, 'ReferenceDate')
+        etree.SubElement(self._root, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.fecEmision.strftime("%Y-%m-%d")
+        tag = etree.QName(self._cbc, 'IssueDate')
+        etree.SubElement(self._root, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.fecEnvio.strftime("%Y-%m-%d")
+
+        self._getFirma()
+        self._getEmisor()
+        cont = 1
+        for documento in self.documento.documentosAnulados:
+            tag = etree.QName(self._sac, 'VoidedDocumentsLine')
+            line = etree.SubElement(self._root, tag.text, nsmap={'sac': tag.namespace})
+            tag = etree.QName(self._cbc, 'LineID')
+            etree.SubElement(line, tag.text, nsmap={'cbc': tag.namespace}).text = str(cont)
+            cont += 1
+            tag = etree.QName(self._cbc, 'DocumentTypeCode')
+            etree.SubElement(line, tag.text, nsmap={'cbc': tag.namespace}).text = documento.tipoDocumento
+            tag = etree.QName(self._sac, 'DocumentSerialID')
+            etree.SubElement(line, tag.text, nsmap={'sac': tag.namespace}).text = documento.serie
+            tag = etree.QName(self._sac, 'DocumentNumberID')
+            etree.SubElement(line, tag.text, nsmap={'sac': tag.namespace}).text = documento.numero
+            tag = etree.QName(self._sac, 'VoidReasonDescription')
+            etree.SubElement(line, tag.text, nsmap={'sac': tag.namespace}).text = 'Cancelado'
+
+
     def getDocumento(self):
         if self.documento.tipoDocumento in ['ra']:
             self._getAnulacion()
         elif self.documento.tipoDocumento in ['rc']:
             self._getResumen()
+        elif self.documento.tipoDocumento in ['20']:
+            self._getRetencion()
+        elif self.documento.tipoDocumento in ['rr']:
+            self._anularRetencion()
         xml = etree.tostring(self._root, pretty_print=True, xml_declaration=True, encoding='utf-8', standalone=False)
         return xml
 

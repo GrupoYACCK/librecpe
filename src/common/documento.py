@@ -93,7 +93,13 @@ class Documento:
         self.codSucursalPartida = ""
         self.codSucursalLlegada = ""
         self.rucLlegada = ""
-    
+
+        #Retencion
+        self.codigoRetencion = ""
+        self.porcentajeRetencion = 0.0
+        self.totalRetencion = 0.0
+        self.totalNetoPagado = 0.0
+
     def validate(self):
         if not self.tributos:
             raise LibreCpeError("tributos", "No esta defenifido")
@@ -192,6 +198,7 @@ class Documento:
             if vals.get('retencion'):
                 self.retencion = Retencion(vals.get('retencion'))
 
+
         elif self.tipoDocumento in ['09']:
             self.observacion = vals.get('observacion')
             self.fecEmision = datetime.strptime(vals.get('fecEmision', datetime.now(tz=pytz.timezone('America/Lima')).strftime("%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
@@ -251,6 +258,42 @@ class Documento:
             # BIENES A TRANSPORTAR
             for detalle in vals.get('detalles', []):
                 self.detalles.add(DetalleBienes(detalle))
+        # Retencion
+        elif self.tipoDocumento in ['20']:
+            self.emisor = Emisor(vals.get('emisor', {}))
+            self.adquirente = Adquirente(vals.get('adquirente', {}))
+            try:
+                self.fecEmision = datetime.strptime(vals.get('fecEmision',
+                                                             datetime.now(tz=pytz.timezone('America/Lima')).strftime(
+                                                                 "%Y-%m-%d")), "%Y-%m-%d")
+            except Exception:
+                raise LibreCpeError("fecEmision", "No esta defenifido o no cumple el formato 'AAA-mm-dd HH:MM:SS'")
+
+            self.codigoRetencion = vals.get('codigoRetencion', '')
+
+            self.porcentajeRetencion = round(vals.get('porcentajeRetencion', 0.0), 2)
+            self.totalRetencion = round(vals.get('totalRetencion', 0.0), 2)
+            self.totalNetoPagado = round(vals.get('totalNetoPagado', 0.0), 2)
+            self.tipMoneda = vals.get('tipMoneda', '')
+            for detalle in vals.get('detalles', []):
+                self.detalles.add(RetencionDetalle(detalle))
+        elif self.tipoDocumento in ['rr']:
+            self.emisor = Emisor(vals.get('emisor', {}))
+            try:
+                self.fecEmision = datetime.strptime(vals.get('fecEmision',
+                                                             datetime.now(tz=pytz.timezone('America/Lima')).strftime(
+                                                                 "%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
+            except Exception:
+                raise LibreCpeError("fecEmision", "No esta defenifido o no cumple el formato 'AAA-mm-dd HH:MM:SS'")
+
+            try:
+                self.fecEnvio = datetime.strptime(vals.get('fecEnvio',
+                                                           datetime.now(tz=pytz.timezone('America/Lima')).strftime(
+                                                               "%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
+            except Exception:
+                raise LibreCpeError("fecEnvio", "No esta defenifido o no cumple el formato 'AAA-mm-dd HH:MM:SS'")
+            for anulado in vals.get('documentosAnulados', []):
+                self.documentosAnulados.add(DocumentoAnulado(**anulado))
 
     def getDocumento(self, key=None, cer=None, xml=None, nombre_documento=None):
         vals = {}
@@ -496,3 +539,36 @@ class Retencion:
         self.base = round(vals.get('base', 0.0), 2)
         self.monto = round(vals.get('monto', 0.0), 2)
         self.porcentaje = round(vals.get('porcentaje', 0.0)/100, 5)
+
+# Retencion
+class RetencionDetalle:
+    def __init__(self, vals={}):
+        self.numero = vals.get('numero', '')
+        self.tipoDocumento = vals.get('tipoDocumento', '')
+        self.fechaFactura = vals.get('fechaFactura', '')
+        self.monedaFactura = vals.get('monedaFactura', '')
+        self.monedaRetencion = vals.get('monedaRetencion', '')
+        self.totalFactura = round(vals.get('totalFactura', 0.0), 2)
+        self.totalRetencion = round(vals.get('totalRetencion', 0.0), 2)
+        self.totalPagoRetencion = round(vals.get('totalPagoRetencion', 0.0), 2)
+        pagos = []
+        for pago in vals.get('pagos', []):
+            pagos.append(RetencionDetallePagos(pago))
+        self.pagos = pagos
+        tasatasaCambios = []
+        for tasa in vals.get('tasatasaCambios', []):
+            tasatasaCambios.append(RetencionDetalleTasa(tasa))
+        self.tasatasaCambios = tasatasaCambios
+
+class RetencionDetallePagos:
+    def __init__(self, vals={}):
+        self.moneda = vals.get('moneda', '')
+        self.fecha = vals.get('fecha', '')
+        self.monto = round(vals.get('monto', 0.0), 2)
+
+class RetencionDetalleTasa:
+    def __init__(self, vals={}):
+        self.fecha = vals.get('fecha', '')
+        self.moneda = vals.get('moneda', 'PEN')
+        self.monedaDestino = vals.get('monedaDestino', 'PEN')
+        self.tasaCambio = round(vals.get('tasaCambio', 0.0), 4)
