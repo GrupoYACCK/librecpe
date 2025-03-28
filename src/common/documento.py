@@ -5,6 +5,7 @@ from . import Emisor, Adquirente, Servidor, Transportista
 from . import LibreCpeError
 from librecpe.cpe import LibreCPE, ClienteCpe, Cliente
 from librecpe.nubefact import NubeFactPSE
+from librecpe.tci import ClienteTCI
 import re
 
 class Documento:
@@ -99,6 +100,12 @@ class Documento:
         self.porcentajeRetencion = 0.0
         self.totalRetencion = 0.0
         self.totalNetoPagado = 0.0
+
+        # Otros Detalles adicionales
+        self.detallesAdicionales = set()
+
+        # Vendedor
+        self.vendedor = Adquirente()
 
     def validate(self):
         if not self.tributos:
@@ -198,7 +205,10 @@ class Documento:
             if vals.get('retencion'):
                 self.retencion = Retencion(vals.get('retencion'))
 
-
+            if vals.get('detallesAdicionales'):
+                for detalle in vals.get('detallesAdicionales', []):
+                    self.detallesAdicionales.add(DetallesAdicionales(detalle))
+            self.vendedor = Adquirente(vals.get('vendedor', {}))
         elif self.tipoDocumento in ['09']:
             self.observacion = vals.get('observacion')
             self.fecEmision = datetime.strptime(vals.get('fecEmision', datetime.now(tz=pytz.timezone('America/Lima')).strftime("%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
@@ -332,6 +342,12 @@ class Documento:
                 return nubefact.anularDocumento(servidor_obj)
             else: 
                 return nubefact.enviarDocumento(servidor_obj)
+        elif servidor_obj.servidor in ['tci']:
+            tci_client = ClienteTCI(servidor_obj)
+            if tipo == 'ra':
+                return tci_client.registrar(self)
+            else:
+                return tci_client.registrar(self)
         else:
             return {}
 
@@ -356,7 +372,6 @@ class Documento:
 class DetalleBienes:
     
     def __init__(self, vals={}):
-        
         self.cantidad = round(vals.get('cantidad', 0.0), 10)
         self.codUnidadMedida = vals.get('codUnidadMedida', 'NIU')
         self.descripcion = vals.get('descripcion', '').replace("\n", " ")[:250].strip()
@@ -572,3 +587,10 @@ class RetencionDetalleTasa:
         self.moneda = vals.get('moneda', 'PEN')
         self.monedaDestino = vals.get('monedaDestino', 'PEN')
         self.tasaCambio = round(vals.get('tasaCambio', 0.0), 4)
+
+class DetallesAdicionales:
+    def __init__(self, vals={}):
+        self.descripcion = vals.get('descripcion', '')
+        self.valor1 = vals.get('valor1', '')
+        self.valor2 = vals.get('valor2', '')
+        self.valor3 = vals.get('valor3', '')

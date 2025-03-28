@@ -17,6 +17,8 @@ class Empresa:
         self.codPais = vals.get('codPais', '').strip()
         self.codEstablecimiento = vals.get('codEstablecimiento', '0000').strip()
         self.email = vals.get('email', '').strip()
+        self.telefono = vals.get('telefono', '').strip()
+        self.web = vals.get('web', '').strip()
     
     def validate(self):
         if not self.nombre:
@@ -49,6 +51,7 @@ class Adquirente(Empresa):
         self.apPaterno = vals.get('apPaterno', '').strip()
         self.apMaterno = vals.get('apMaterno', '').strip()
         self.codSucursal = vals.get('codSucursal', '0000').strip()
+        self.codigo = vals.get('codigo', '').strip()
         if not self.nombre:
             if self.nomPersona and self.apPaterno:
                 self.nombre = "%s %s, %s" % (self.apPaterno, self.apMaterno, self.nomPersona)    

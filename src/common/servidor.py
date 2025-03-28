@@ -6,6 +6,7 @@ class Servidor:
             'sunat':'SUNAT',
             'nubefact_pse':'NubeFact PSE',
             'nubefact_ose':'NubeFact OSE',
+            'tci': 'TCI',
             'otros':'Otros'
         }
         self.webservices = {
