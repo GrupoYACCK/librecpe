@@ -51,6 +51,27 @@ class TCI:
     def get_ubl(self):
         return {"VersionUbl": '2.1'}
 
+    def get_descuento_cargo(self):
+        descuentos = []
+        desc = 0.0
+        for descuento in self.documento.cargoDescuentos:
+            if self.documento.tipoDocumento not in ['07', '08']:
+                descuentos.append({
+                    "ENDescuentoCargoCabecera": {
+                        "CodigoMotivo": descuento.codigo,
+                        # "Descripcion": descuento.descripcion or '',
+                        "IdComprobanteDetalle": 0,
+                        "IdDescuentoCargoCabecera": 0,
+                        "Indicador": descuento.indicador == 'false' and '0' or '1',
+                        "Monto": descuento.monto,
+                        "MontoBase": descuento.base,
+                        "Porcentaje": descuento.porcentaje * 100
+                    }
+                })
+                if descuento.indicador == 'false':
+                    desc+=descuento.monto
+        return descuentos, desc
+
     def get_comprobante(self):
 
         vals = {
@@ -93,7 +114,7 @@ class TCI:
                 "TipoComprobante": self.documento.tipoDocumento,
                 "Moneda": self.documento.tipMoneda,
                 "Multiglosa": self.documento.notas and [self.documento.notas] or [],
-                "TipoPago": self.documento.medioPago.tipo == 'Contado' and '1' or '2',
+                "TipoPago": self.documento.medioPago.tipo == 'Contado' and '1' or '0',
                 "NroOrdenCompra": self.documento.referencia,
                 "TotalPrepago": self.documento.totalAnticipos,
                 "TipoOperacion": self.documento.tipOperacion,
@@ -124,13 +145,46 @@ class TCI:
 
             }
         }
+        if self.documento.cargoDescuentos:
+            descuentos, desc = self.get_descuento_cargo()
+            vals['oENComprobante']['DescuentoCargoCabecera'] = descuentos
+            vals['oENComprobante']['DescuentoGlobal'] = desc
         if self.documento.documentosModificados:
             vals['oENComprobante']['ComprobanteMotivosDocumentos'] = self.get_motivo()
         if self.documento.vendedor:
             vals['oENComprobante']['Vendedor'] = self.get_vendedor()
+        if self.documento.tipoDocumento in ['07', '08']:
+            vals['oENComprobante']['ENComprobanteMotivoDocumento'] = self.get_motivo()
         vals['flagAdjunto'] = '0'
         # Detraccion
         # FormaPagoSunat
+        return vals
+
+    def get_detraccion(self):
+        vals = {}
+        if self.documento.detraccion:
+            vals['ENDetraccion'] = {
+                "BienesServicios" : {
+                    "ENBienesServicios": {
+                        "Codigo": '3000',
+                        "Valor": self.documento.detraccion.codigo
+                    }
+                },
+                "CodigoBienServicio": '0',
+                "NumeroCuenta": {
+                    "ENNumeroCuenta": {
+                        "Codigo": '3001',
+                        "CodigoFormaPago": self.documento.detraccion.medioPago,
+                        "Valor": self.documento.detraccion.cuentaBanco
+                    }
+                },
+                "Porcentaje": {
+                    "ENPorcentaje": {
+                        "Codigo": '2003',
+                        "Valor": self.documento.detraccion.porcentaje
+                    }
+                }
+            }
         return vals
 
     def get_montos_totales(self):
@@ -166,7 +220,7 @@ class TCI:
                 "Sustento": self.documento.motivo
             }
             mod.append(motivo)
-        return {'ENComprobanteMotivoDocumento': mod}
+        return mod ##{'ENComprobanteMotivoDocumento': mod}
 
     # oGeneral.ENComprobante.ENComprobanteNotaDocRef
     # .Serie
@@ -347,7 +401,7 @@ class TCI:
                 "DiasVencimiento": '0',
                 "FechaVencimiento": self.documento.fecVencimiento or self.documento.fecEmision.strftime("%Y-%m-%d"), #, fecha or self.documento.fecEmision.strftime("%Y-%m-%d"),
                 # Revisar
-                "NotaInstruccion": "Prueba",
+                "NotaInstruccion": "",
             }
         })
         return vals
@@ -392,8 +446,7 @@ class TCI:
     def get_documento(self):
         vals = {}
         vals.update(self.get_empresa())
-        if self.documento.tipoDocumento in ['07', '08']:
-            vals.update(self.get_motivo())
+
         # vals['oGeneral'].update(self.get_receptor())
         # vals.update(self.get_detalles())
         # vals.update(self.get_propiedades_adicionales())
@@ -424,11 +477,13 @@ class TCI:
         # ENNumeradosNoEmitidosCab.ENNumeradosNoEmitidos
         for anulado in self.documento.documentosAnulados:
             numerados_no_emitido.append({
-                "Item": str(i),
-                "CodigoTipoDocumento": anulado.tipoDocumento,
-                "SerieDocumento": anulado.serie,
-                "NumeroDocumento": anulado.numero,
-                "MotivoBaja": anulado.descripcion
+                'ENNumeradosNoEmitidos': {
+                    "Item": str(i),
+                    "CodigoTipoDocumento": anulado.tipoDocumento,
+                    "SerieDocumento": anulado.serie,
+                    "NumeroDocumento": anulado.numero,
+                    "MotivoBaja": anulado.descripcion
+                }
             })
         vals['oENNumeradosNoEmitidosCab']['NumeradosNoEmitidos'] = numerados_no_emitido
         return vals

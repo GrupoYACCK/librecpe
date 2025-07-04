@@ -345,7 +345,7 @@ class Documento:
         elif servidor_obj.servidor in ['tci']:
             tci_client = ClienteTCI(servidor_obj)
             if tipo == 'ra':
-                return tci_client.registrar(self)
+                return tci_client.registrar_comunicacion_baja(self)
             else:
                 return tci_client.registrar(self)
         else:
@@ -360,6 +360,12 @@ class Documento:
             cliente = Cliente()
             zip, estado_respuesta, respuesta, datos_respuesta  = cliente.get_status(document_name=nombre_documento, type=tipo, client=cliente_soap, ticket=ticket)
             return {'estado': estado_respuesta, 'respuesta':respuesta, 'datos_respuesta': datos_respuesta}
+        if servidor.servidor in ['tci']:
+            tci_client = ClienteTCI(servidor)
+            if tipo == 'ra':
+                return tci_client.estadoComunicacionBaja(nombre_documento)
+            else:
+                return tci_client.consulta_estado_comprobantes(nombre_documento)
         elif servidor.servidor in ['nubefact_pse']:
             nubefact = NubeFactPSE(self)
             return nubefact.estadoDocumento(servidor, nombre_documento, tipo)
