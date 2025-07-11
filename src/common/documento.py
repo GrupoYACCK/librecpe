@@ -185,7 +185,7 @@ class Documento:
             self.totalVenta = round(vals.get('totalVenta', 0.0), 2)
                         
             for documentoModificado in vals.get('documentosModificados', []):
-                self.documentosModificados.add(DocumentoRelacionado(documentoModificado.get('numero',''), documentoModificado.get('tipoDocumento')))
+                self.documentosModificados.add(DocumentoRelacionado(**documentoModificado))
             for documentoModificado in vals.get('documentosRelacionados', []):
                 self.documentosRelacionados.add(DocumentoRelacionado(documentoModificado.get('numero',''), documentoModificado.get('tipoDocumento')))
             self.totalTributos = round(vals.get('totalTributos', 0.0), 2)
@@ -413,10 +413,11 @@ class DocumentoAnulado:
         
 
 class DocumentoRelacionado:
-    def __init__(self, numero='', tipoDocumento='', emisor=set()):
+    def __init__(self, numero='', tipoDocumento='', emisor=set(), fecEmision= None):
         self.tipoDocumento = tipoDocumento
         self.numero = numero
         self.emisor = emisor and Emisor(emisor) or set()
+        self.fecEmision = fecEmision
 
 class Detalle:
 

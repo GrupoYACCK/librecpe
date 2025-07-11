@@ -149,12 +149,14 @@ class TCI:
             descuentos, desc = self.get_descuento_cargo()
             vals['oENComprobante']['DescuentoCargoCabecera'] = descuentos
             vals['oENComprobante']['DescuentoGlobal'] = desc
-        if self.documento.documentosModificados:
-            vals['oENComprobante']['ComprobanteMotivosDocumentos'] = self.get_motivo()
+        if self.documento.documentosModificados and self.documento.tipoDocumento in ['07', '08']:
+            motivos, ref = self.get_motivo()
+            vals['oENComprobante']['ComprobanteMotivosDocumentos'] = motivos
+            vals['oENComprobante']['ComprobanteNotaCreditoDocRef'] = ref
         if self.documento.vendedor:
             vals['oENComprobante']['Vendedor'] = self.get_vendedor()
-        if self.documento.tipoDocumento in ['07', '08']:
-            vals['oENComprobante']['ENComprobanteMotivoDocumento'] = self.get_motivo()
+        # if self.documento.tipoDocumento in ['07', '08']:
+        #     vals['oENComprobante']['ENComprobanteMotivoDocumento'] = self.get_motivo()
         vals['flagAdjunto'] = '0'
         # Detraccion
         # FormaPagoSunat
@@ -212,15 +214,31 @@ class TCI:
     def get_motivo(self):
         # oGeneral.ENComprobante. ENComprobanteMotivoDocumento
         mod = []
+        ref = []
         for modificados in self.documento.documentosModificados:
-            motivo = {
-                "SerieDocRef": modificados.numero.split('-')[0],
-                "NumeroDocRef": modificados.numero.split('-')[-1],
-                "CodigoMotivoEmision": self.documento.codigoNota,
-                "Sustento": self.documento.motivo
+            motivo = {"ENComprobanteMotivoDocumento": {
+                    "SerieDocRef": modificados.numero.split('-')[0],
+                    "NumeroDocRef": modificados.numero.split('-')[-1],
+                    "CodigoMotivoEmision": self.documento.codigoNota,
+                    "Sustentos": [
+                        {"ENComprobanteMotivoDocumentoSustento" :{
+                                "Sustento": self.documento.motivo
+                            }
+                        }
+                    ]
+                }
             }
+            referencia = {
+                "ENComprobanteNotaDocRef": {
+                    "Serie": modificados.numero.split('-')[0],
+                    "Numero": modificados.numero.split('-')[-1],
+                    "TipoComprobante": modificados.tipoDocumento,
+                    "FechaDocRef": modificados.fecEmision
+                }
+            }
+            ref.append(referencia)
             mod.append(motivo)
-        return mod ##{'ENComprobanteMotivoDocumento': mod}
+        return mod, ref ##{'ENComprobanteMotivoDocumento': mod}
 
     # oGeneral.ENComprobante.ENComprobanteNotaDocRef
     # .Serie
@@ -445,31 +463,86 @@ class TCI:
 
     def get_documento(self):
         vals = {}
-        vals.update(self.get_empresa())
+        if self.documento.tipoDocumento not in ['09']:
+            vals.update(self.get_empresa())
+            vals.update(self.get_comprobante())
+        else:
+            # ent_GuiaRemisionRemitente.at_ControlOtorgamiento
+            documentos_relacionados = []
+            for relacionado in self.documento.documentosRelacionados:
+                documentos_relacionados.append({
+                    "at_NumeroComprobante": relacionado.numero,
+                    "at_TipoComprobante": relacionado.tipoDocumento,
+                })
+            vals['ent_GuiaRemisionRemitente'] = {
+                "ent_Remitente": {
+                    "at_NumeroDocumentoIdentidad": self.documento.emisor.numDocumento,
+                    "at_RazonSocial": self.documento.emisor.nombre,
+                    "at_NombreComercial": self.documento.emisor.nomComercial,
+                    "at_Telefono": self.documento.emisor.telefono,
+                    "at_CorreoContacto": self.documento.emisor.email,
+                    "at_SitioWeb": self.documento.emisor.web,
+                },
+                "ent_DireccionFiscal": {
+                    "at_Ubigeo": self.documento.emisor.ubigeo,
+                    "at_DireccionDetallada": self.documento.emisor.direccion,
+                    "at_Urbanizacion": self.documento.emisor.urbanizacion,
+                    "at_Provincia": self.documento.emisor.provincia,
+                    "at_Departamento": self.documento.emisor.region,
+                    "at_Distrito": self.documento.emisor.distrito,
+                    "at_CodigoPais": self.documento.emisor.codPais,
+                },
+                "ent_Destinatario": {
+                    "at_TipoDocumentoIdentidad": self.documento.adquirente.tipoDocumento,
+                    "at_NumeroDocumentoIdentidad": self.documento.adquirente.numDocumento,
+                    "at_RazonSocial": self.documento.adquirente.nombre,
+                },
+                "ent_Destinatario.ent_Correo" : {
+                    "at_CorreoPrincipal": self.documento.adquirente.email,
+                    "aa_CorreoSecundario": ""
+                },
+                # ent_Proveedor
+                # ent_DatosGenerales
+                "ent_DatosGenerales": {
+                    "at_FechaEmision": self.documento.fecEmision.strftime("%Y-%m-%d"),
+                    "at_Serie": self.documento.numero.split('-')[0],
+                    "at_Numero": self.documento.numero.split('-')[-1],
+                    "at_Observacion": self.documento.observacion or '',
+                    "at_FechaEnvio": self.documento.fechaTraslado.strftime("%Y-%m-%d %H:%M:%S"),
+                    # ent_GuiaRemisionRemitente.ent_DatosGenerales.ent_ComprobanteAnterior
+                    # ent_DocumentosRelacionados
+                    "ent_DocumentosRelacionados": documentos_relacionados,
+                    "ent_InformacionTraslado": {
+                        "at_CodigoMotivo": self.documento.motivo,
+                        "at_IndicadorMotivo": self.documento.transbordo,
+                        "at_DescripcionMotivo": "",
+                        "ent_InformacionPesoBruto": {
+                            "at_Peso": self.documento.pesoBruto,
+                            "at_UnidadMedida": self.documento.pesoBrutoUnidad,
+                            "at_Cantidad": self.documento.bultos,
+                        },
+                        "ent_InformacionTrasporte": {
+                            "at_Modalidad": self.documento.modoTraslado,
+                            "at_FechaInicio": self.documento.fechaTraslado.strftime("%Y-%m-%d %H:%M:%S"),
+                        }
+                    }
+                },
 
-        # vals['oGeneral'].update(self.get_receptor())
-        # vals.update(self.get_detalles())
-        # vals.update(self.get_propiedades_adicionales())
-        # vals.update(self.get_detalles_adicionales())
-        # if self.documento.vendedor:
-        #     vals.update(self.get_vendedor())
-        # Prepago
-        # self.get_prepago(comprobante)
-        # Sucursal
-        # vals.update(self.get_sucursal())
-        # FormaPago
-        # vals.update(self.get_forma_pago())
-        # vals.update(self.get_tributos())
-        vals.update(self.get_comprobante())
+            }
+
+
         vals['IdSeguimiento'] = '0'
         _logger.info(json.dumps(vals))
         return vals
 
     def get_comunicacion_baja(self):
         vals = {}
-        vals.update(self.get_empresa())
+        # vals.update(self.get_empresa())
+        vals['oENEmpresa'] = {
+                'Ruc': self.documento.emisor.numDocumento
+            }
         vals['oENNumeradosNoEmitidosCab'] = {}
-        vals['oENNumeradosNoEmitidosCab']['FechaGeneracion'] =  self.documento.fecEnvio
+        vals['oENNumeradosNoEmitidosCab']['FechaGeneracion'] = self.documento.fecEnvio
         vals['oENNumeradosNoEmitidosCab']['FechaEmision'] = self.documento.fecEmision
 
         i = 1
@@ -481,7 +554,7 @@ class TCI:
                     "Item": str(i),
                     "CodigoTipoDocumento": anulado.tipoDocumento,
                     "SerieDocumento": anulado.serie,
-                    "NumeroDocumento": anulado.numero,
+                    "NumeroDocumento": str(int(anulado.numero)),
                     "MotivoBaja": anulado.descripcion
                 }
             })

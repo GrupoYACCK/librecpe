@@ -4,7 +4,12 @@ from zeep.transports import Transport
 from .tci import TCI
 from base64 import encodebytes
 
-
+DOC_CODE = {
+    '01': 'Factura',
+    '03': 'Boleta',
+    '07': 'NotaCredito',
+    '08': 'NotaDebito',
+}
 class ClienteTCI:
     def __init__(self, servidor):
         self.servidor = servidor
@@ -44,7 +49,11 @@ class ClienteTCI:
         # params['CodigoHash'] = ''
         # params['IdComprobanteCliente'] = ''
         try:
-            response = self.client.service.Registrar(params, Otorgar=1)
+            response = self.client.service.Registrar(params,
+                                                     oTipoComprobante=DOC_CODE.get(documento.tipoDocumento, 'Factura'),
+                                                     Cadena="",
+                                                     ListaError=[],
+                                                     Otorgar=1)
             res =  process_response(response)
             # Procesar rpta de la sunat
             if res.get('respuesta') and res.get('respuesta', {}).get('CodigoBarras'):
@@ -183,7 +192,7 @@ class ClienteTCI:
         tci = TCI(documento)
         params = tci.get_comunicacion_baja()
         try:
-            response = self.client.service.RegistrarComunicacionBaja(params)
+            response = self.client.service.RegistrarComunicacionBaja(params, Cadena="", ListaError=[], IdCliente="0")
             res = process_response(response)
         except Exception as e:
             respuesta = {
