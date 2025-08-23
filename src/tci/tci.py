@@ -463,77 +463,201 @@ class TCI:
 
     def get_documento(self):
         vals = {}
-        if self.documento.tipoDocumento not in ['09']:
+        if self.documento.tipoDocumento and self.documento.tipoDocumento not in ['09']:
             vals.update(self.get_empresa())
             vals.update(self.get_comprobante())
+            vals['IdSeguimiento'] = '0'
         else:
             # ent_GuiaRemisionRemitente.at_ControlOtorgamiento
             documentos_relacionados = []
             for relacionado in self.documento.documentosRelacionados:
                 documentos_relacionados.append({
-                    "at_NumeroComprobante": relacionado.numero,
-                    "at_TipoComprobante": relacionado.tipoDocumento,
+                    "en_DocumentoRelacionadoGRR": {
+                        "at_NumeroComprobante": relacionado.numero,
+                        "at_TipoComprobante": relacionado.tipoDocumento,
+                    }
                 })
-            vals['ent_GuiaRemisionRemitente'] = {
-                "ent_Remitente": {
+            vals.update({
+                "ent_Autenticacion": {
+                    "at_Ruc": self.documento.emisor.numDocumento,
+                },
+                "ent_RemitenteGRR": {
                     "at_NumeroDocumentoIdentidad": self.documento.emisor.numDocumento,
                     "at_RazonSocial": self.documento.emisor.nombre,
                     "at_NombreComercial": self.documento.emisor.nomComercial,
                     "at_Telefono": self.documento.emisor.telefono,
                     "at_CorreoContacto": self.documento.emisor.email,
                     "at_SitioWeb": self.documento.emisor.web,
+                    "ent_DireccionFiscal": {
+                        "at_Ubigeo": self.documento.emisor.ubigeo,
+                        "at_DireccionDetallada": self.documento.emisor.direccion,
+                        "at_Urbanizacion": self.documento.emisor.urbanizacion,
+                        "at_Provincia": self.documento.emisor.provincia,
+                        "at_Departamento": self.documento.emisor.region,
+                        "at_Distrito": self.documento.emisor.distrito,
+                        "at_CodigoPais": self.documento.emisor.codPais,
+                    },
                 },
-                "ent_DireccionFiscal": {
-                    "at_Ubigeo": self.documento.emisor.ubigeo,
-                    "at_DireccionDetallada": self.documento.emisor.direccion,
-                    "at_Urbanizacion": self.documento.emisor.urbanizacion,
-                    "at_Provincia": self.documento.emisor.provincia,
-                    "at_Departamento": self.documento.emisor.region,
-                    "at_Distrito": self.documento.emisor.distrito,
-                    "at_CodigoPais": self.documento.emisor.codPais,
-                },
-                "ent_Destinatario": {
-                    "at_TipoDocumentoIdentidad": self.documento.adquirente.tipoDocumento,
-                    "at_NumeroDocumentoIdentidad": self.documento.adquirente.numDocumento,
-                    "at_RazonSocial": self.documento.adquirente.nombre,
-                },
-                "ent_Destinatario.ent_Correo" : {
-                    "at_CorreoPrincipal": self.documento.adquirente.email,
-                    "aa_CorreoSecundario": ""
+
+                "ent_DestinatarioGRR": {
+                    "at_TipoDocumentoIdentidad": self.documento.remitente.tipoDocumento,
+                    "at_NumeroDocumentoIdentidad": self.documento.remitente.numDocumento,
+                    "at_RazonSocial": self.documento.remitente.nombre,
+                    "ent_Correo": {
+                        "at_CorreoPrincipal": self.documento.remitente.email,
+                        "aa_CorreoSecundario": ""
+                    },
                 },
                 # ent_Proveedor
                 # ent_DatosGenerales
-                "ent_DatosGenerales": {
+                "ent_DatosGeneralesGRR": {
                     "at_FechaEmision": self.documento.fecEmision.strftime("%Y-%m-%d"),
                     "at_Serie": self.documento.numero.split('-')[0],
                     "at_Numero": self.documento.numero.split('-')[-1],
                     "at_Observacion": self.documento.observacion or '',
-                    "at_FechaEnvio": self.documento.fechaTraslado.strftime("%Y-%m-%d %H:%M:%S"),
-                    # ent_GuiaRemisionRemitente.ent_DatosGenerales.ent_ComprobanteAnterior
-                    # ent_DocumentosRelacionados
-                    "ent_DocumentosRelacionados": documentos_relacionados,
-                    "ent_InformacionTraslado": {
+                    "at_FechaEnvio": self.documento.fecEmision.strftime("%Y-%m-%d %H:%M:%S"),
+                    # Opcional
+                    "at_HoraEmision": self.documento.fecEmision.strftime("%H:%M:%S"),
+                    # l_ComprobanteAnteriorGRR
+                    "l_DocumentoRelacionadoGRR": documentos_relacionados,
+                    "ent_InformacionTrasladoGRR": {
                         "at_CodigoMotivo": self.documento.motivo,
+                        "at_DescripcionMotivo": self.documento.descripcion,
                         "at_IndicadorMotivo": self.documento.transbordo,
-                        "at_DescripcionMotivo": "",
-                        "ent_InformacionPesoBruto": {
+                        "ent_InformacionPesoBrutoGRR": {
                             "at_Peso": self.documento.pesoBruto,
                             "at_UnidadMedida": self.documento.pesoBrutoUnidad,
                             "at_Cantidad": self.documento.bultos,
                         },
-                        "ent_InformacionTrasporte": {
-                            "at_Modalidad": self.documento.modoTraslado,
-                            "at_FechaInicio": self.documento.fechaTraslado.strftime("%Y-%m-%d %H:%M:%S"),
+                        "l_InformacionTransporteGRR": self.get_informacion_transporte(),
+                        "l_BienesGRR": self.get_bienes(),
+                        "ent_InformacionAdicionalTotales": {
+                            "at_PesoNeto": self.documento.pesoBruto,
+                            "at_PesoBruto": self.documento.pesoBruto,
+                            # Revisar
+                            "at_CantidadBobina": self.documento.bultos,
+                            "at_CantidadBienes": self.documento.bultos,
+                        },
+                        "ent_PuntoLlegadaGRR": {
+                            "at_Ubigeo": self.documento.ubigeoLlegada,
+                            "at_DireccionCompleta": self.documento.direccionLlegada,
+                            # "at_Urbanizacion": self.documento.destino.urbanizacion,
+                            # "at_Provincia": self.documento.destino.provincia,
+                            # "at_Departamento": self.documento.destino.region,
+                            # "at_Distrito": self.documento.destino.distrito,
+                            # "at_CodigoPais": self.documento.destino.codPais,
+                            # "at_CodigoEstablecimiento": self.documento.codSucursalLlegada,
+                            # "at_NumeroDocumentoIdentidad": self.documento.rucLlegada,
+                        },
+                        "ent_PuntoPartidaGRR": {
+                            "at_Ubigeo": self.documento.ubigeoPartida,
+                            "at_DireccionCompleta": self.documento.direccionPartida,
+                            # "at_Urbanizacion": self.documento.origen.urbanizacion,
+                            # "at_Provincia": self.documento.origen.provincia,
+                            # "at_Departamento": self.documento.origen.region,
+                            # "at_Distrito": self.documento.origen.distrito,
+                            # "at_CodigoPais": self.documento.origen.codPais,
+                            # "at_CodigoEstablecimiento": self.documento.codSucursalPartida,
+
                         }
-                    }
+                    },
+
                 },
+                "at_ControlOtorgamiento": True
+            })
 
-            }
+            if self.documento.codSucursalLlegada:
+                vals['ent_DatosGeneralesGRR']["ent_InformacionTrasladoGRR"]["ent_PuntoLlegadaGRR"]["at_CodigoEstablecimiento"] = self.documento.codSucursalLlegada
+                vals['ent_DatosGeneralesGRR']["ent_InformacionTrasladoGRR"]["ent_PuntoLlegadaGRR"]["at_NumeroDocumentoIdentidad"] = self.documento.emisor.numDocumento
+            if self.documento.codSucursalPartida:
+                vals['ent_DatosGeneralesGRR']["ent_InformacionTrasladoGRR"]["ent_PuntoPartidaGRR"]["at_CodigoEstablecimiento"] = self.documento.codSucursalLlegada
+                vals['ent_DatosGeneralesGRR']["ent_InformacionTrasladoGRR"]["ent_PuntoPartidaGRR"]["at_NumeroDocumentoIdentidad"] = self.documento.emisor.numDocumento
 
-
-        vals['IdSeguimiento'] = '0'
         _logger.info(json.dumps(vals))
         return vals
+
+    # Guia de Remisión Remitente
+    def get_informacion_transporte(self):
+        vals = {
+            "en_InformacionTransporteGRR": {
+                "at_Modalidad": self.documento.modoTraslado,
+                "at_FechaInicio": self.documento.fechaTraslado #.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        }
+        if self.documento.modoTraslado == '01':
+            publico = {}
+            for transportista in self.documento.transportistas:
+                if transportista.tipoDocumento == '6':
+                    publico['at_TipoDocumentoIdentidad'] = transportista.tipoDocumento
+                    publico['at_NumeroDocumentoIdentidad'] = transportista.numDocumento
+                    publico['at_RazonSocial'] = transportista.nombre
+                    if transportista.numRegistro:
+                        publico['at_NumeroMTC'] = transportista.numRegistro
+                    # Revisar en test
+                    vehículos = []
+                    for vehículo in self.documento.vehículos:
+                        vehículos.append({
+                            "en_VehiculoGRR": {
+                                "aa_NumeroPlaca": vehículo.placa.replace("-", ""),
+                            }
+                        })
+                    publico['l_VehiculoGRR'] = vehículos
+                    transportistas = []
+                    for transp in self.documento.transportistas:
+                        if transp.tipoDocumento != '6':
+                            transportistas.append({
+                                "en_ConductorGRR": {
+                                    "at_TipoDocumentoIdentidad": transp.tipoDocumento,
+                                    "at_NumeroDocumentoIdentidad": transp.numDocumento,
+                                    "at_Licencia": transp.nombre,
+                                    "at_Nombres": transp.nomPersona or '',
+                                    "at_Apellidos": transp.apPaterno + ' ' + transp.apMaterno,
+                                }
+                            })
+                    publico['l_ConductorGRR'] = transportistas
+
+            vals['ent_TransportePublicoGRR'] = publico
+        elif self.documento.modoTraslado == '02':
+            privado = {}
+            for transportista in self.documento.transportistas:
+                if transportista.tipoDocumento != '6':
+                    vehículos = []
+                    for vehículo in self.documento.vehículos:
+                        vehículos.append({
+                            "en_VehiculoGRR": {
+                                "aa_NumeroPlaca": vehículo.placa.replace("-", ""),
+                            }
+                        })
+                    privado['l_VehiculoGRR'] = vehículos
+                    transportistas = []
+                    for transp in self.documento.transportistas:
+                        if transp.tipoDocumento != '6':
+                            transportistas.append({
+                                "en_ConductorGRR": {
+                                    "at_TipoDocumentoIdentidad": transp.tipoDocumento,
+                                    "at_NumeroDocumentoIdentidad": transp.numDocumento,
+                                    "at_Licencia": transp.nombre,
+                                    "at_Nombres": transp.nomPersona or '',
+                                    "at_Apellidos": transp.apPaterno + ' ' + transp.apMaterno,
+                                }
+                            })
+                    privado['l_ConductorGRR'] = transportistas
+
+            vals['ent_TransportePrivadoGRR'] = privado
+        return vals
+
+    def get_bienes(self):
+        bienes = []
+        for bien in self.documento.detalles:
+            bienes.append({
+                "en_BienesGRR": {
+                    "at_Cantidad": bien.cantidad,
+                    "at_UnidadMedida": bien.codUnidadMedida,
+                    "at_Descripcion": bien.descripcion,
+                    "at_Codigo": bien.codProducto,
+                }
+            })
+        return bienes
 
     def get_comunicacion_baja(self):
         vals = {}

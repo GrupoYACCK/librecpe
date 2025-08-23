@@ -346,6 +346,8 @@ class Documento:
             tci_client = ClienteTCI(servidor_obj)
             if tipo == 'ra':
                 return tci_client.registrar_comunicacion_baja(self)
+            elif tipo == 'guia':
+                return tci_client.registrar_grr(self)
             else:
                 return tci_client.registrar(self)
         else:

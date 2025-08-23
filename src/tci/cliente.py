@@ -77,7 +77,41 @@ class ClienteTCI:
             }
             return {'estado': False, 'respuesta': respuesta, 'datos_respuesta': {}}
 
+    def registrar_grr(self, documento):
+        def process_response(response):
+            # {
+            #     'at_NivelResultado': False,
+            #     'at_MensajeResultado': 'Debe colocar el correo principal. [El atributo CorreoPrincipal es nulo o está vacío. - Proceso: GeneracionXmlComprobanteGuiaRemisionRemitente_V2]',
+            #     'at_CodigoHash': None,
+            #     'at_NombreXML': None,
+            #     'at_CodigoError': -1
+            # }
 
+            res = helpers.serialize_object(response)
+            vals = {}
+            vals['respuesta'] = {}
+            if res.get('at_NivelResultado'):
+                vals['estado'] = True
+            else:
+                vals['estado'] = False
+            if res.get('at_MensajeResultado'):
+                vals['respuesta']['respuesta'] = response.at_MensajeResultado
+                vals['respuesta']['nota'] = response.at_MensajeResultado
+            if res.get('at_CodigoHash'):
+                vals['respuesta']['hashqr'] = response.at_CodigoHash
+            return vals
+
+
+        tci = TCI(documento)
+        params = tci.get_documento()
+        try:
+            response = self.client.service.RegistrarGRR20(params)
+            return process_response(response)
+        except Exception as e:
+            respuesta = {
+                'faultstring': str(e),
+            }
+            return {'estado': False, 'respuesta': respuesta, 'datos_respuesta': {}}
     def obtener_pdf(self, document_name):
         res = document_name.split("-")
         def process_response(response):
