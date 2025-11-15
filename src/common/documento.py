@@ -562,7 +562,7 @@ class RetencionDetalle:
 
 class RetencionDetallePagos:
     def __init__(self, vals={}):
-        self.numero = vals.get('numero', 1)
+        self.numeroPago = vals.get('numeroPago', 1)
         self.moneda = vals.get('moneda', '')
         self.fecha = vals.get('fecha', '')
         self.monto = round(vals.get('monto', 0.0), 2)

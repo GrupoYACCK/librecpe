@@ -352,7 +352,7 @@ class Ubl20:
                 tag = etree.QName(self._cac, 'Payment')
                 payment = etree.SubElement(inv_line, tag.text, nsmap={'cac':tag.namespace})
                 tag = etree.QName(self._cbc, 'ID')
-                etree.SubElement(payment, tag.text, nsmap={'cbc':tag.namespace}).text= str(pago.numero)
+                etree.SubElement(payment, tag.text, nsmap={'cbc':tag.namespace}).text= str(pago.numeroPago)
                 tag = etree.QName(self._cbc, 'PaidAmount')
                 etree.SubElement(payment, tag.text, currencyID=pago.moneda,  nsmap={'cbc':tag.namespace}).text= str(pago.monto)
                 tag = etree.QName(self._cbc, 'PaidDate')
