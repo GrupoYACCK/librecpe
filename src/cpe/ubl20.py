@@ -348,13 +348,11 @@ class Ubl20:
             tag = etree.QName(self._cbc, 'TotalInvoiceAmount')
             etree.SubElement(inv_line, tag.text, currencyID=detalle.monedaFactura,
                              nsmap={'cbc':tag.namespace}).text=str(detalle.totalFactura)
-            sequence = 1
             for pago in detalle.pagos:
                 tag = etree.QName(self._cac, 'Payment')
                 payment = etree.SubElement(inv_line, tag.text, nsmap={'cac':tag.namespace})
                 tag = etree.QName(self._cbc, 'ID')
-                etree.SubElement(payment, tag.text, nsmap={'cbc':tag.namespace}).text= str(sequence)
-                sequence+=1
+                etree.SubElement(payment, tag.text, nsmap={'cbc':tag.namespace}).text= str(pago.numero)
                 tag = etree.QName(self._cbc, 'PaidAmount')
                 etree.SubElement(payment, tag.text, currencyID=pago.moneda,  nsmap={'cbc':tag.namespace}).text= str(pago.monto)
                 tag = etree.QName(self._cbc, 'PaidDate')
