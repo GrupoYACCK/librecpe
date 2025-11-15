@@ -500,11 +500,11 @@ class TCI:
                 },
 
                 "ent_DestinatarioGRR": {
-                    "at_TipoDocumentoIdentidad": self.documento.remitente.tipoDocumento,
-                    "at_NumeroDocumentoIdentidad": self.documento.remitente.numDocumento,
-                    "at_RazonSocial": self.documento.remitente.nombre,
+                    "at_TipoDocumentoIdentidad": self.documento.destinatario.tipoDocumento,
+                    "at_NumeroDocumentoIdentidad": self.documento.destinatario.numDocumento,
+                    "at_RazonSocial": self.documento.destinatario.nombre,
                     "ent_Correo": {
-                        "at_CorreoPrincipal": self.documento.remitente.email,
+                        "at_CorreoPrincipal": self.documento.destinatario.email,
                         "aa_CorreoSecundario": ""
                     },
                 },
