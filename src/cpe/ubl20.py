@@ -365,7 +365,7 @@ class Ubl20:
             tag = etree.QName(self._sac, 'SUNATRetentionDate')
             etree.SubElement(information, tag.text, nsmap={'sac':tag.namespace}).text= self.documento.fecEmision.strftime("%Y-%m-%d")
             tag = etree.QName(self._sac, 'SUNATNetTotalPaid')
-            etree.SubElement(information, tag.text, currencyID=detalle.monedaFactura, nsmap={'sac':tag.namespace}).text=  str(detalle.totalPagoRetencion)
+            etree.SubElement(information, tag.text, currencyID=detalle.monedaRetencion, nsmap={'sac':tag.namespace}).text=  str(detalle.totalPagoRetencion)
             for tasa in detalle.tasatasaCambios:
                 tag = etree.QName(self._cac, 'ExchangeRate')
                 exchange = etree.SubElement(information, tag.text, nsmap={'cac':tag.namespace})
