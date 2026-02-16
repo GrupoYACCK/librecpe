@@ -3,8 +3,8 @@ import pytz
 from base64 import encodebytes, decodebytes
 from . import Emisor, Adquirente, Servidor, Transportista
 from . import LibreCpeError
-from librecpe.cpe import LibreCPE, ClienteCpe, Cliente
-from librecpe.nubefact import NubeFactPSE
+from ..cpe import LibreCPE, ClienteCpe, Cliente
+from ..nubefact import NubeFactPSE
 import re
 
 class Documento:

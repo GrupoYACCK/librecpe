@@ -44,5 +44,5 @@ class Servidor:
         self.clave = vals.get('clave', '')
         self.idCliente = vals.get('idCliente', '')
         self.claveCliente = vals.get('claveCliente', '')
-        self.clientePython = vals.get('clientePython', 'pysimplesoap')
+        self.clientePython = vals.get('clientePython', 'zeep')
         return self
