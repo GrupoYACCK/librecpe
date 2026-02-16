@@ -36,7 +36,8 @@ class Servidor:
             res.append((codigo,nombre))
         return res
     
-    def setServidor(self, vals={}):
+    def setServidor(self, vals=None):
+        vals = vals or {}
         self.servidor = vals.get('servidor', 'sunat')
         self.url = vals.get('url', '')
         self.usuario = vals.get('usuario', '')

@@ -3,7 +3,8 @@ from .error import LibreCpeError
 
 class Empresa:
     
-    def __init__(self, vals={}):
+    def __init__(self, vals=None):
+        vals = vals or {}
         self.nombre = vals.get('nombre', '').strip()
         self.nomComercial = vals.get('nomComercial', '-').strip()
         self.tipoDocumento = vals.get('tipoDocumento', '').strip()
@@ -20,30 +21,32 @@ class Empresa:
     
     def validate(self):
         if not self.nombre:
-            raise LibreCpeError("(emisor,adquiriente)/nombre", "No esta defenifido")
+            raise LibreCpeError("(emisor,adquiriente)/nombre", "No esta definido")
         if not self.tipoDocumento:
-            raise LibreCpeError("(emisor,adquiriente)/tipoDocumento", "No esta defenifido")
+            raise LibreCpeError("(emisor,adquiriente)/tipoDocumento", "No esta definido")
         if not self.tipoDocumento:
-            raise LibreCpeError("(emisor,adquiriente)/numDocumento", "No esta defenifido")
+            raise LibreCpeError("(emisor,adquiriente)/numDocumento", "No esta definido")
         return True
 
 
 class Emisor(Empresa):
     
-    def __init__(self, vals={}):
+    def __init__(self, vals=None):
+        vals = vals or {}
         super(Emisor, self).__init__(vals)
         self.codSucursal = vals.get('codSucursal', '0000').strip()
     
     def validate(self):
         res = super(Emisor, self).validate()
         if not self.codSucursal:
-            raise LibreCpeError("emisor/codSucursal", "No esta defenifido")
+            raise LibreCpeError("emisor/codSucursal", "No esta definido")
         return res
 
     
 class Adquirente(Empresa):
     
-    def __init__(self, vals={}):
+    def __init__(self, vals=None):
+        vals = vals or {}
         super(Adquirente, self).__init__(vals)
         self.nomPersona = vals.get('nomPersona', '').strip()
         self.apPaterno = vals.get('apPaterno', '').strip()
@@ -58,7 +61,8 @@ class Adquirente(Empresa):
         return res
         
 class Transportista(Adquirente):
-    def __init__(self, vals={}):
+    def __init__(self, vals=None):
+        vals = vals or {}
         super(Transportista, self).__init__(vals)
         self.licencia = vals.get('licencia', '').strip()
         self.numRegistro = vals.get('numRegistro', '').strip()
