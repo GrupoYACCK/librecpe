@@ -132,3 +132,7 @@ dmypy.json
 .pydevproject
 .settings/
 .idea/
+# Agents
+.agents/
+# Flake8
+.flake8

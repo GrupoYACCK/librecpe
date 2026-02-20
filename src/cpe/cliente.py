@@ -6,7 +6,6 @@ import zipfile
 import base64
 
 
-
 from zeep.wsse.username import UsernameToken
 from zeep import Client, Settings
 from zeep.transports import Transport
@@ -36,14 +35,16 @@ class Cliente(object):
         self._ticket = None
         self._hashqr = None
         self.in_memory_data = BytesIO()
-        self.in_memory_zip = zipfile.ZipFile(self.in_memory_data, "w", zipfile.ZIP_DEFLATED, False)
+        self.in_memory_zip = zipfile.ZipFile(
+            self.in_memory_data, "w", zipfile.ZIP_DEFLATED, False
+        )
 
     def generaArchivoZip(self, filename, filecontent):
         self.in_memory_zip.writestr(filename, filecontent)
 
     def preparaZip(self):
-        self._zip_filename = '{}.zip'.format(self._document_name)
-        xml_filename = '{}.xml'.format(self._document_name)
+        self._zip_filename = "{}.zip".format(self._document_name)
+        xml_filename = "{}.xml".format(self._document_name)
         self.generaArchivoZip(xml_filename, self._xml)
         for zfile in self.in_memory_zip.filelist:
             zfile.create_system = 0
@@ -53,14 +54,22 @@ class Cliente(object):
         if self._type in ["sync", "guia"] and not self._ticket:
             self._zip_file = base64.b64encode(self.in_memory_data.getvalue())
             self._hashqr = hashlib.sha256(self.in_memory_data.getvalue()).hexdigest()
-            self._response_status, self._response = self._client.send_bill(self._zip_filename, self._zip_file, self._hashqr)
+            self._response_status, self._response = self._client.send_bill(
+                self._zip_filename, self._zip_file, self._hashqr
+            )
         elif self._type in ["ticket", "guia"]:
-            self._response_status, self._response = self._client.get_status(self._ticket)
+            self._response_status, self._response = self._client.get_status(
+                self._ticket
+            )
         elif self._type == "status":
-            self._response_status, self._response = self._client.get_status_cdr(self._document_name)
+            self._response_status, self._response = self._client.get_status_cdr(
+                self._document_name
+            )
         else:
             self._zip_file = base64.b64encode(self.in_memory_data.getvalue())
-            self._response_status, self._response = self._client.send_summary(self._zip_filename, self._zip_file)
+            self._response_status, self._response = self._client.send_summary(
+                self._zip_filename, self._zip_file
+            )
 
     def generarHashqr(self, document_name=None, xml=None):
         if document_name:
@@ -76,63 +85,116 @@ class Cliente(object):
         if not self._response:
             if self._response_status:
                 self._response_status = False
-        elif self._response.get('applicationResponse'):
-            self._response_data = self._response['applicationResponse']
+        elif self._response.get("applicationResponse"):
+            self._response_data = self._response["applicationResponse"]
             try:
-                xml_filename = 'R-%s.xml' % (self._document_name)
-                codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(self._response_data, xml_filename)
+                xml_filename = "R-%s.xml" % (self._document_name)
+                codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(
+                    self._response_data, xml_filename
+                )
                 self._sunat_response.update(
-                    {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota, 'documento': documento})
+                    {
+                        "codigo": codigo,
+                        "descripcion": descripcion,
+                        "respuesta": respuesta,
+                        "nota": nota,
+                        "documento": documento,
+                    }
+                )
             except Exception:
                 pass
-        elif self._response.get('status', {}).get('content'):
-            self._response_data = self._response['status']['content']
+        elif self._response.get("status", {}).get("content"):
+            self._response_data = self._response["status"]["content"]
             try:
-                xml_filename = 'R-%s.xml' % (self._document_name)
-                codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(self._response_data, xml_filename)
+                xml_filename = "R-%s.xml" % (self._document_name)
+                codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(
+                    self._response_data, xml_filename
+                )
                 self._sunat_response.update(
-                    {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota, 'documento': documento})
+                    {
+                        "codigo": codigo,
+                        "descripcion": descripcion,
+                        "respuesta": respuesta,
+                        "nota": nota,
+                        "documento": documento,
+                    }
+                )
             except Exception:
                 pass
-        elif self._response.get('statusCdr', {}).get('content', None):
-            self._response_data = self._response.get('statusCdr', {}).get('content', None)
+        elif self._response.get("statusCdr", {}).get("content", None):
+            self._response_data = self._response.get("statusCdr", {}).get(
+                "content", None
+            )
             try:
-                xml_filename = 'R-%s.xml' % (self._document_name)
-                codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(self._response_data, xml_filename)
+                xml_filename = "R-%s.xml" % (self._document_name)
+                codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(
+                    self._response_data, xml_filename
+                )
                 self._sunat_response.update(
-                    {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota, 'documento': documento})
+                    {
+                        "codigo": codigo,
+                        "descripcion": descripcion,
+                        "respuesta": respuesta,
+                        "nota": nota,
+                        "documento": documento,
+                    }
+                )
             except Exception:
                 pass
-        elif self._response.get('arcCdr'):
-            self._response_data = self._response.get('arcCdr')
+        elif self._response.get("arcCdr"):
+            self._response_data = self._response.get("arcCdr")
             try:
-                xml_filename = 'R-%s.xml' % (self._document_name)
-                codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(self._response_data, xml_filename)
+                xml_filename = "R-%s.xml" % (self._document_name)
+                codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(
+                    self._response_data, xml_filename
+                )
                 self._sunat_response.update(
-                    {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota, 'documento':documento})
+                    {
+                        "codigo": codigo,
+                        "descripcion": descripcion,
+                        "respuesta": respuesta,
+                        "nota": nota,
+                        "documento": documento,
+                    }
+                )
             except Exception:
                 pass
-        elif self._response.get('ticket'):
-            self._response_data = self._response['ticket']
-        elif self._response.get('numTicket'):
+        elif self._response.get("ticket"):
+            self._response_data = self._response["ticket"]
+        elif self._response.get("numTicket"):
             self._sunat_response = {"hashqr": self._hashqr}
-            self._response_data = self._response['numTicket']
-        elif self._response.get('status') and self._response.get('status', {}).get('statusCode'):
+            self._response_data = self._response["numTicket"]
+        elif self._response.get("status") and self._response.get("status", {}).get(
+            "statusCode"
+        ):
             res = self._response
             self._response_status = False
-            self._sunat_response = {'faultcode': res['status'].get('statusCode', False), 'faultstring': ""}
-        elif self._response.get('statusCdr', {}).get('statusCode', False):
+            self._sunat_response = {
+                "faultcode": res["status"].get("statusCode", False),
+                "faultstring": "",
+            }
+        elif self._response.get("statusCdr", {}).get("statusCode", False):
             self._response_status = False
-            self._sunat_response = {'faultcode': self._response.get('statusCdr', {}).get('statusCode', False),
-                                    'faultstring': self._response.get('statusCdr', {}).get('statusMessage', False)}
-        elif self._response.get('faultcode'):
+            self._sunat_response = {
+                "faultcode": self._response.get("statusCdr", {}).get(
+                    "statusCode", False
+                ),
+                "faultstring": self._response.get("statusCdr", {}).get(
+                    "statusMessage", False
+                ),
+            }
+        elif self._response.get("faultcode"):
             self._response_status = False
-            self._sunat_response = {'faultcode': self._response.get('faultcode'),
-                                    "faultstring": self._response.get('faultstring', "")}
-        elif self._response.get('error'):
+            self._sunat_response = {
+                "faultcode": self._response.get("faultcode"),
+                "faultstring": self._response.get("faultstring", ""),
+            }
+        elif self._response.get("error"):
             self._response_status = False
-            self._sunat_response = {'faultcode': '',
-                                    "faultstring": str(self._response.get('error', ""))}
+            self._sunat_response = {
+                "faultcode": "",
+                "faultstring": str(self._response.get("error", "")),
+            }
 
     def procesar(self, document_name, type, xml, client):
         self._xml = xml
@@ -142,46 +204,55 @@ class Cliente(object):
         self.preparaZip()
         self.enviar()
         self.procesarRespuesta()
-        return self._zip_file, self._response_status, self._sunat_response, self._response_data
+        return (
+            self._zip_file,
+            self._response_status,
+            self._sunat_response,
+            self._response_data,
+        )
 
     def obtenerRespuesta(self, file, name):
         zf = zipfile.ZipFile(BytesIO(base64.b64decode(file)))
         xml = zf.open(name).read()
         res = self.obtenerRespuestaXML(xml)
-        res_code = res.get('codigo')
-        description = res.get('descripcion')
-        response = res.get('respuesta')
-        note = res.get('nota')
-        document_desc = res.get('documento_desc')
+        res_code = res.get("codigo")
+        description = res.get("descripcion")
+        response = res.get("respuesta")
+        note = res.get("nota")
+        document_desc = res.get("documento_desc")
         zf.close()
         return res_code, description, response, note, document_desc
 
     @staticmethod
     def obtenerRespuestaXML(xml):
         sunat_response = etree.fromstring(xml)
-        cbc = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'
+        cbc = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
         # tag = etree.QName(cbc, 'ResponseDate')
         # date=sunat_response.find('.//'+tag.text)
         # tag = etree.QName(cbc, 'ResponseTime')
         # time= sunat_response.find('.//'+tag.text)
         # if time!=-1 and date!=-1:
         #    self.date_end = fields.Datetime.context_timestamp(self, datetime.now())
-        tag = etree.QName(cbc, 'ResponseCode')
-        code = sunat_response.find('.//' + tag.text)
+        tag = etree.QName(cbc, "ResponseCode")
+        code = sunat_response.find(".//" + tag.text)
         res_code = ""
         if code != -1:
             res_code = "%04d" % int(code.text)
-        tag = etree.QName(cbc, 'Description')
-        description = sunat_response.find('.//' + tag.text)
+        tag = etree.QName(cbc, "Description")
+        description = sunat_response.find(".//" + tag.text)
         res_desc = ""
         if description != -1:
             res_desc = description.text
         response = "%s - %s" % (res_code, res_desc)
-        notes = sunat_response.xpath(".//cbc:Note", namespaces={
-            'cbc': 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'})
+        notes = sunat_response.xpath(
+            ".//cbc:Note",
+            namespaces={
+                "cbc": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+            },
+        )
         res_note = ""
-        tag = etree.QName(cbc, 'DocumentDescription')
-        documento = sunat_response.find('.//' + tag.text)
+        tag = etree.QName(cbc, "DocumentDescription")
+        documento = sunat_response.find(".//" + tag.text)
         documento_desc = ""
         if documento != -1 or documento is not None:
             try:
@@ -192,7 +263,13 @@ class Cliente(object):
             res_note += note.text + "\n"
         note = res_note
 
-        return {'codigo': res_code, 'descripcion': res_desc, 'respuesta': response, 'nota': note, 'documento_desc': documento_desc}
+        return {
+            "codigo": res_code,
+            "descripcion": res_desc,
+            "respuesta": response,
+            "nota": note,
+            "documento_desc": documento_desc,
+        }
 
     def get_status(self, document_name, type, client, ticket=None):
         # self._type="ticket"
@@ -202,7 +279,12 @@ class Cliente(object):
         self._client = client
         self.enviar()
         self.procesarRespuesta()
-        return self._zip_file, self._response_status, self._sunat_response, self._response_data
+        return (
+            self._zip_file,
+            self._response_status,
+            self._sunat_response,
+            self._response_data,
+        )
 
     def get_status_cdr(self, document_name, client):
         self._type = "status"
@@ -219,13 +301,13 @@ class ClienteCpe(object):
         self.servidor = servidor
         self.tipo = tipo
         if servidor:
-            if servidor.servidor in ['sunat', 'nubefact_ose']:
+            if servidor.servidor in ["sunat", "nubefact_ose"]:
                 self._username = "%s%s" % (ruc, servidor.usuario)
             else:
                 self._username = servidor.usuario
             self._password = servidor.clave
-            self._version = 'v1'
-            self._url2 = BytesIO(b'''
+            self._version = "v1"
+            self._url2 = BytesIO(b"""
 
             <wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap11="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:wsp="http://www.w3.org/ns/ws-policy" xmlns:wsp200409="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:wsp200607="http://www.w3.org/2006/07/ws-policy" xmlns:ns0="http://service.gem.factura.comppago.registro.servicio.sunat.gob.pe/" xmlns:ns1="http://service.sunat.gob.pe" xmlns:ns2="http://www.datapower.com/extensions/http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="http://service.gem.factura.comppago.registro.servicio.sunat.gob.pe/">
             <wsdl:import location="https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?ns1.wsdl" namespace="http://service.sunat.gob.pe"/>
@@ -279,12 +361,12 @@ class ClienteCpe(object):
                 <soap11:address location="https://e-factura.sunat.gob.pe:443/ol-ti-itcpfegem/billService"/>
                 </wsdl:port>
             </wsdl:service>
-            </wsdl:definitions>''')
+            </wsdl:definitions>""")
             self._url = servidor.url
             self._clientePython = servidor.clientePython
             self._api_id = servidor.idCliente
             self._api_clave = servidor.claveCliente
-            if tipo != 'guia':
+            if tipo != "guia":
                 self._connect()
         self._method = ""
         self._token = ""
@@ -306,67 +388,70 @@ class ClienteCpe(object):
             res = response.json()
             log.debug(res)
             if response.status_code not in [200, 201]:
-                return False, {'error': str(res)}
+                return False, {"error": str(res)}
             return True, res
         except Exception:
-            return False, {'error': response.text}
+            return False, {"error": response.text}
 
     @staticmethod
     def _process_soap_response(soap_response):
         if not soap_response:
             return {}
         response_tree = etree.fromstring(soap_response)
-        if response_tree.find('.//{*}Fault') is not None:
-            message_element = response_tree.find('.//{*}faultstring')
-            code_element = response_tree.find('.//{*}faultcode')
+        if response_tree.find(".//{*}Fault") is not None:
+            message_element = response_tree.find(".//{*}faultstring")
+            code_element = response_tree.find(".//{*}faultcode")
             code = False
             if code_element is not None:
-                code_parsed = code_element.text.split('.')
+                code_parsed = code_element.text.split(".")
                 if code_parsed:
                     code = code_parsed[-1]
             message = message_element.text
-            if re.findall(r'\d+', message or '') and not re.findall(r'\d+', code or ''):
+            if re.findall(r"\d+", message or "") and not re.findall(r"\d+", code or ""):
                 code = message
-            return {'faultcode': code, 'faultstring': message}
-        if response_tree.find('.//{*}sendBillResponse') is not None:
-            applicationResponse = response_tree.find('.//{*}applicationResponse').text
-            return {'applicationResponse': applicationResponse}
-        if response_tree.find('.//{*}getStatusResponse') is not None:
-            content = response_tree.find('.//{*}content').text
-            return {'status': {'content': content}}
+            return {"faultcode": code, "faultstring": message}
+        if response_tree.find(".//{*}sendBillResponse") is not None:
+            applicationResponse = response_tree.find(".//{*}applicationResponse").text
+            return {"applicationResponse": applicationResponse}
+        if response_tree.find(".//{*}getStatusResponse") is not None:
+            content = response_tree.find(".//{*}content").text
+            return {"status": {"content": content}}
 
-        if response_tree.find('.//{*}sendSummaryResponse') is not None:
-            ticket = response_tree.find('.//{*}ticket').text
-            return {'ticket': ticket}
-        if response_tree.find('.//{*}getStatusCdrResponse') is not None:
-            code = response_tree.find('.//{*}statusCode').text
-            message = response_tree.find('.//{*}statusMessage').text
-            if response_tree.find('.//{*}content') is not None:
-                content = response_tree.find('.//{*}content').text
-                return {'statusCdr': {'content': content}}
+        if response_tree.find(".//{*}sendSummaryResponse") is not None:
+            ticket = response_tree.find(".//{*}ticket").text
+            return {"ticket": ticket}
+        if response_tree.find(".//{*}getStatusCdrResponse") is not None:
+            code = response_tree.find(".//{*}statusCode").text
+            message = response_tree.find(".//{*}statusMessage").text
+            if response_tree.find(".//{*}content") is not None:
+                content = response_tree.find(".//{*}content").text
+                return {"statusCdr": {"content": content}}
 
             else:
-                return {'faultcode': code, 'faultstring': message}
+                return {"faultcode": code, "faultstring": message}
 
         return {}
 
     @staticmethod
     def _get_header(token):
         headers = {}
-        headers['Authorization'] = "Bearer %s" % token
-        headers['Content-Type'] = 'application/json'
+        headers["Authorization"] = "Bearer %s" % token
+        headers["Content-Type"] = "application/json"
         return headers
 
     def _get_token(self):
-        url = "https://api-seguridad.sunat.gob.pe/%s/clientessol/%s/oauth2/token/" % (self._version, self._api_id)
+        url = "https://api-seguridad.sunat.gob.pe/%s/clientessol/%s/oauth2/token/" % (
+            self._version,
+            self._api_id,
+        )
         params = {
-            "grant_type":"password",
+            "grant_type": "password",
             "client_id": self._api_id,
             "client_secret": self._api_clave,
             "username": self._username,
             "password": self._password,
         }
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
         response = requests.post(url, params, headers=headers)
         status, values = self._get_response(response)
         token = False
@@ -375,29 +460,42 @@ class ClienteCpe(object):
         return status, token or values
 
     def _connect(self):
-        if self.tipo != 'guia':
+        if self.tipo != "guia":
             try:
                 settings = Settings(raw_response=True)
                 transport = Transport(operation_timeout=15, timeout=15)
-                client = Client(wsdl=self._url, wsse=UsernameToken(self._username, self._password),  settings=settings, transport=transport)
+                client = Client(
+                    wsdl=self._url,
+                    wsse=UsernameToken(self._username, self._password),
+                    settings=settings,
+                    transport=transport,
+                )
                 self._client = client.service
             except Exception as e:
                 self._client = False
-            if not self._client and self.servidor.servidor in ['sunat']:
+            if not self._client and self.servidor.servidor in ["sunat"]:
                 try:
                     response = requests.get(self._url)
                     url = self._url.replace("billService?wsdl", "billService?ns1.wsdl")
-                    wsdl = BytesIO(response.text.replace("billService?ns1.wsdl", url).encode('utf-8'))
+                    wsdl = BytesIO(
+                        response.text.replace("billService?ns1.wsdl", url).encode(
+                            "utf-8"
+                        )
+                    )
                     settings = Settings(raw_response=True)
                     transport = Transport(operation_timeout=15, timeout=15)
-                    client = Client(wsdl=wsdl, wsse=UsernameToken(self._username, self._password),
-                                    settings=settings, transport=transport)
+                    client = Client(
+                        wsdl=wsdl,
+                        wsse=UsernameToken(self._username, self._password),
+                        settings=settings,
+                        transport=transport,
+                    )
                     self._client = client.service
                 except Exception as e:
                     self._client = False
 
     def _call_service(self, name, params):
-        if self.tipo == 'guia':
+        if self.tipo == "guia":
             url = self._url + self._get_envio_guia()
             log.debug(params)
             status, token = self._get_token()
@@ -421,7 +519,7 @@ class ClienteCpe(object):
             log.info(result.content)
             response = self._process_soap_response(result.content)
             if response:
-                if response.get('faultstring'):
+                if response.get("faultstring"):
                     return False, response
                 return True, response
             else:
@@ -430,74 +528,79 @@ class ClienteCpe(object):
             return False, {}
 
     def send_bill(self, filename, content_file, hash=None):
-        if self.tipo == 'guia':
+        if self.tipo == "guia":
             self._service = "%s" % filename.split(".")[0]
             params = {
                 "archivo": {
                     "nomArchivo": filename,
-                    "arcGreZip": str(content_file, 'utf-8'),
-                    "hashZip": hash
+                    "arcGreZip": str(content_file, "utf-8"),
+                    "hashZip": hash,
                 }
             }
         else:
             params = {
-                'fileName': filename,
-                'contentFile': base64.decodebytes(content_file)
+                "fileName": filename,
+                "contentFile": base64.decodebytes(content_file),
             }
-            if not self._client and self.servidor.servidor in ['sunat']:
+            if not self._client and self.servidor.servidor in ["sunat"]:
                 try:
                     settings = Settings(raw_response=True)
                     transport = Transport(operation_timeout=700, timeout=700)
-                    client = Client(wsdl=self._url2, wsse=UsernameToken(self._username, self._password),
-                                    settings=settings,
-                                    transport=transport)
+                    client = Client(
+                        wsdl=self._url2,
+                        wsse=UsernameToken(self._username, self._password),
+                        settings=settings,
+                        transport=transport,
+                    )
                     self._client = client.service
                 except Exception as e:
                     self._client = False
-        return self._call_service('sendBill', params)
+        return self._call_service("sendBill", params)
 
     def send_summary(self, filename, content_file):
-        params = {
-            'fileName': filename,
-            'contentFile': base64.decodebytes(content_file)
-        }
-        if not self._client and self.servidor.servidor in ['sunat']:
+        params = {"fileName": filename, "contentFile": base64.decodebytes(content_file)}
+        if not self._client and self.servidor.servidor in ["sunat"]:
             try:
                 settings = Settings(raw_response=True)
                 transport = Transport(operation_timeout=700, timeout=700)
-                client = Client(wsdl=self._url2, wsse=UsernameToken(self._username, self._password), settings=settings,
-                                transport=transport)
+                client = Client(
+                    wsdl=self._url2,
+                    wsse=UsernameToken(self._username, self._password),
+                    settings=settings,
+                    transport=transport,
+                )
                 self._client = client.service
             except Exception as e:
                 self._client = False
-        return self._call_service('sendSummary', params)
+        return self._call_service("sendSummary", params)
 
     def get_status(self, ticket_code):
-        if self.tipo != 'guia':
-            params = {
-                'ticket': ticket_code
-            }
-            if not self._client and self.servidor.servidor in ['sunat']:
+        if self.tipo != "guia":
+            params = {"ticket": ticket_code}
+            if not self._client and self.servidor.servidor in ["sunat"]:
                 try:
                     settings = Settings(raw_response=True)
                     transport = Transport(operation_timeout=700, timeout=700)
-                    client = Client(wsdl=self._url2, wsse=UsernameToken(self._username, self._password),
-                                    settings=settings,
-                                    transport=transport)
+                    client = Client(
+                        wsdl=self._url2,
+                        wsse=UsernameToken(self._username, self._password),
+                        settings=settings,
+                        transport=transport,
+                    )
                     self._client = client.service
                 except Exception as e:
                     self._client = False
         else:
             self._service = "envios/%s" % ticket_code
             params = {}
-        return self._call_service('getStatus', params)
+        return self._call_service("getStatus", params)
 
     def get_status_cdr(self, document_name):
         res = document_name.split("-")
         params = {
-            'rucComprobante': res[0],
-            'tipoComprobante': res[1],
-            'serieComprobante': res[2],
-            'numeroComprobante': res[3]
+            "rucComprobante": res[0],
+            "tipoComprobante": res[1],
+            "serieComprobante": res[2],
+            "numeroComprobante": res[3],
         }
-        return self._call_service('getStatusCdr', params)
+        return self._call_service("getStatusCdr", params)

@@ -7,26 +7,27 @@ from ..cpe import LibreCPE, ClienteCpe, Cliente
 from ..nubefact import NubeFactPSE
 import re
 
+
 class Documento:
-    
-    def __init__(self, servidor= None, tipo = None):
-        self.servidor = servidor or 'SUNAT' # vals.get('servidor','sunat')
+
+    def __init__(self, servidor=None, tipo=None):
+        self.servidor = servidor or "SUNAT"  # vals.get('servidor','sunat')
         self.tipo = tipo
         self.tipoCAmbio = 1
         self.numero = ""
         self.tipoDocumento = ""
-            
+
         self.emisor = Emisor()
         self.fecEmision = ""
         self.documentosAnulados = []
         self.documentos = []
-        
-        self.tipMoneda = ''
+
+        self.tipMoneda = ""
         self.adquirente = Adquirente({})
-                    
-        self.condicion = '1'
-        self.motivo = ''
-        self.codigoNota = ''
+
+        self.condicion = "1"
+        self.motivo = ""
+        self.codigoNota = ""
         self.totalValVenta = 0.0
         self.totalImpVenta = 0.0
         self.totalDescuentos = 0.0
@@ -43,18 +44,18 @@ class Documento:
         self.guias = []
         self.leyendas = []
         self.cargoDescuentos = []
-                    
+
         self.detalles = []
-            
-        self.medioPago = MedioPago() 
-        
+
+        self.medioPago = MedioPago()
+
         self.observacion = ""
-        
+
         self.documentosRelacionados = []
-            
+
         self.remitente = Adquirente()
         self.destinatario = Adquirente()
-        
+
         self.establecimientoTercero = Adquirente()
         self.codSucursal = ""
         self.descripcion = ""
@@ -63,29 +64,29 @@ class Documento:
         self.vehiculoM1L = False
 
         self.pesoBruto = 0.0
-        self.pesoBrutoUnidad = 'KGM'
+        self.pesoBrutoUnidad = "KGM"
         self.bultos = 0.0
-        
+
         self.modoTraslado = ""
         self.fechaTraslado = ""
-        
+
         self.transportistas = []
-        
+
         self.placa = ""
-        
-        self.ubigeoLlegada = ''
+
+        self.ubigeoLlegada = ""
         self.direccionLlegada = ""
-        
+
         self.vehículos = []
-        
-        self.contenedor = ''
-            
-        self.ubigeoPartida = ''
-        self.direccionPartida = ''
-            
-        self.puerto = ''
+
+        self.contenedor = ""
+
+        self.ubigeoPartida = ""
+        self.direccionPartida = ""
+
+        self.puerto = ""
         self.anticipos = []
-        self.notas = ''
+        self.notas = ""
 
         self.detraccion = []
         self.retencion = []
@@ -94,7 +95,7 @@ class Documento:
         self.codSucursalLlegada = ""
         self.rucLlegada = ""
 
-        #Retencion
+        # Retencion
         self.codigoRetencion = ""
         self.totalRetencion = 0.0
         self.totalNetoPagado = 0.0
@@ -104,331 +105,471 @@ class Documento:
             raise LibreCpeError("tributos", "No esta definido")
 
     def setDocument(self, vals):
-        self.numero = vals.get('numero', '')
-        self.tipoDocumento = vals.get('tipoDocumento', '')
-            
-        if self.tipo in ['rc', 'ra']:
-            self.emisor = Emisor(vals.get('emisor', {}))
+        self.numero = vals.get("numero", "")
+        self.tipoDocumento = vals.get("tipoDocumento", "")
+
+        if self.tipo in ["rc", "ra"]:
+            self.emisor = Emisor(vals.get("emisor", {}))
             try:
-                self.fecEmision = datetime.strptime(vals.get('fecEmision', datetime.now(tz=pytz.timezone('America/Lima')).strftime("%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
+                self.fecEmision = datetime.strptime(
+                    vals.get(
+                        "fecEmision",
+                        datetime.now(tz=pytz.timezone("America/Lima")).strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        ),
+                    ),
+                    "%Y-%m-%d %H:%M:%S",
+                )
             except Exception as e:
-                raise LibreCpeError("fecEmision", "No esta definido o no cumple el formato 'AAA-mm-dd HH:MM:SS': %s" % str(e))
-            
-            if self.tipoDocumento in ['rc', 'ra']:
+                raise LibreCpeError(
+                    "fecEmision",
+                    "No esta definido o no cumple el formato 'AAA-mm-dd HH:MM:SS': %s"
+                    % str(e),
+                )
+
+            if self.tipoDocumento in ["rc", "ra"]:
                 try:
-                    self.fecEnvio = datetime.strptime(vals.get('fecEnvio', datetime.now(tz=pytz.timezone('America/Lima')).strftime("%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
+                    self.fecEnvio = datetime.strptime(
+                        vals.get(
+                            "fecEnvio",
+                            datetime.now(tz=pytz.timezone("America/Lima")).strftime(
+                                "%Y-%m-%d %H:%M:%S"
+                            ),
+                        ),
+                        "%Y-%m-%d %H:%M:%S",
+                    )
                 except Exception as e:
-                    raise LibreCpeError("fecEnvio", "No esta definido o no cumple el formato 'AAA-mm-dd HH:MM:SS': %s" % str(e))
-            if self.tipo in ['ra']:
-                for anulado in vals.get('documentosAnulados',[]):
+                    raise LibreCpeError(
+                        "fecEnvio",
+                        "No esta definido o no cumple el formato 'AAA-mm-dd HH:MM:SS': %s"
+                        % str(e),
+                    )
+            if self.tipo in ["ra"]:
+                for anulado in vals.get("documentosAnulados", []):
                     self.documentosAnulados.append(DocumentoAnulado(**anulado))
-            elif self.tipo in ['rc']:
-                if self.tipoDocumento in ['rc']:
-                    for documento in vals.get('documentos'):
+            elif self.tipo in ["rc"]:
+                if self.tipoDocumento in ["rc"]:
+                    for documento in vals.get("documentos"):
                         doc = Documento(tipo=self.tipo)
                         doc.setDocument(documento)
                         self.documentos.append(doc)
                 else:
-                    self.tipMoneda = vals.get('tipMoneda', '')
-                    self.adquirente = Adquirente(vals.get('adquirente', {}))
+                    self.tipMoneda = vals.get("tipMoneda", "")
+                    self.adquirente = Adquirente(vals.get("adquirente", {}))
                     # Valido solo para Boletas
-                    self.condicion = vals.get('condicion', '1')
-                    self.motivo = vals.get('motivo', '')
-                    self.codigoNota = vals.get('codigoNota', '')
-                    self.totalValVenta = round(vals.get('totalValVenta', 0.0), 2)
-                    self.totalImpVenta = round(vals.get('totalImpVenta', 0.0), 2)
-                    self.totalDescuentos = round(vals.get('totalDescuentos', 0.0), 2)
-                    self.totalCargos = round(vals.get('totalCargos', 0.0), 2)
-                    self.totalAnticipos = round(vals.get('totalAnticipos', 0.0), 2)
-                    self.totalVenta = round(vals.get('totalVenta', 0.0), 2)
-                    for documentoModificado in vals.get('documentosModificados', []):
-                        self.documentosModificados.append(DocumentoRelacionado(documentoModificado.get('numero',''), documentoModificado.get('tipoDocumento')))
-                    self.totalTributos = round(vals.get('totalTributos', 0.0), 2)
-                    for tributo in vals.get('tributos', []):
+                    self.condicion = vals.get("condicion", "1")
+                    self.motivo = vals.get("motivo", "")
+                    self.codigoNota = vals.get("codigoNota", "")
+                    self.totalValVenta = round(vals.get("totalValVenta", 0.0), 2)
+                    self.totalImpVenta = round(vals.get("totalImpVenta", 0.0), 2)
+                    self.totalDescuentos = round(vals.get("totalDescuentos", 0.0), 2)
+                    self.totalCargos = round(vals.get("totalCargos", 0.0), 2)
+                    self.totalAnticipos = round(vals.get("totalAnticipos", 0.0), 2)
+                    self.totalVenta = round(vals.get("totalVenta", 0.0), 2)
+                    for documentoModificado in vals.get("documentosModificados", []):
+                        self.documentosModificados.append(
+                            DocumentoRelacionado(
+                                documentoModificado.get("numero", ""),
+                                documentoModificado.get("tipoDocumento"),
+                            )
+                        )
+                    self.totalTributos = round(vals.get("totalTributos", 0.0), 2)
+                    for tributo in vals.get("tributos", []):
                         self.tributos.append(Tributo(tributo))
-                    for operacion in vals.get('operaciones', []):
+                    for operacion in vals.get("operaciones", []):
                         self.operaciones.append(TotalOperaciones(**operacion))
-        elif self.tipoDocumento in ['01','03','07','08']:
-            self.emisor = Emisor(vals.get('emisor', {}))
+        elif self.tipoDocumento in ["01", "03", "07", "08"]:
+            self.emisor = Emisor(vals.get("emisor", {}))
             try:
-                self.fecEmision = datetime.strptime(vals.get('fecEmision', datetime.now(tz=pytz.timezone('America/Lima')).strftime("%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
+                self.fecEmision = datetime.strptime(
+                    vals.get(
+                        "fecEmision",
+                        datetime.now(tz=pytz.timezone("America/Lima")).strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        ),
+                    ),
+                    "%Y-%m-%d %H:%M:%S",
+                )
             except Exception as e:
-                raise LibreCpeError("fecEmision", "No esta definido o no cumple el formato 'AAA-mm-dd HH:MM:SS': %s" % str(e))
-            self.tipoDeCambio = round(vals.get('tipoDeCambio', 1), 3)
-            self.fecVencimiento = vals.get('fecVencimiento', '')
-            self.tipOperacion = vals.get('tipOperacion', '')
-            self.tipMoneda = vals.get('tipMoneda', '')
-            self.adquirente = Adquirente(vals.get('adquirente', {}))
-            self.referencia = vals.get('referencia','')
-            for guia in vals.get('guias', []):
+                raise LibreCpeError(
+                    "fecEmision",
+                    "No esta definido o no cumple el formato 'AAA-mm-dd HH:MM:SS': %s"
+                    % str(e),
+                )
+            self.tipoDeCambio = round(vals.get("tipoDeCambio", 1), 3)
+            self.fecVencimiento = vals.get("fecVencimiento", "")
+            self.tipOperacion = vals.get("tipOperacion", "")
+            self.tipMoneda = vals.get("tipMoneda", "")
+            self.adquirente = Adquirente(vals.get("adquirente", {}))
+            self.referencia = vals.get("referencia", "")
+            for guia in vals.get("guias", []):
                 self.guias.append(Guia(guia))
-            for leyenda in vals.get('leyendas', []):
-                self.leyendas.append(Leyenda(leyenda.get('codLeyenda', ''), leyenda.get('desLeyenda', '')))
-            for cargoDescuento in vals.get("cargoDescuentos",[]):
+            for leyenda in vals.get("leyendas", []):
+                self.leyendas.append(
+                    Leyenda(
+                        leyenda.get("codLeyenda", ""), leyenda.get("desLeyenda", "")
+                    )
+                )
+            for cargoDescuento in vals.get("cargoDescuentos", []):
                 self.cargoDescuentos.append(CargoDescuento(cargoDescuento))
-            self.motivo = vals.get('motivo', '')
-            self.codigoNota = vals.get('codigoNota', '')
-            
-            self.totalValVenta = round(vals.get('totalValVenta', 0.0), 2)
-            self.totalImpVenta = round(vals.get('totalImpVenta', 0.0), 2)
-            self.totalDescuentos = round(vals.get('totalDescuentos', 0.0), 2)
-            self.totalCargos = round(vals.get('totalCargos', 0.0), 2)
-            self.totalAnticipos = round(vals.get('totalAnticipos', 0.0), 2)
-            self.totalVenta = round(vals.get('totalVenta', 0.0), 2)
-                        
-            for documentoModificado in vals.get('documentosModificados', []):
-                self.documentosModificados.append(DocumentoRelacionado(documentoModificado.get('numero',''), documentoModificado.get('tipoDocumento')))
-            for documentoModificado in vals.get('documentosRelacionados', []):
-                self.documentosRelacionados.append(DocumentoRelacionado(documentoModificado.get('numero',''), documentoModificado.get('tipoDocumento')))
-            self.totalTributos = round(vals.get('totalTributos', 0.0), 2)
-            
-            for tributo in vals.get('tributos', []):
+            self.motivo = vals.get("motivo", "")
+            self.codigoNota = vals.get("codigoNota", "")
+
+            self.totalValVenta = round(vals.get("totalValVenta", 0.0), 2)
+            self.totalImpVenta = round(vals.get("totalImpVenta", 0.0), 2)
+            self.totalDescuentos = round(vals.get("totalDescuentos", 0.0), 2)
+            self.totalCargos = round(vals.get("totalCargos", 0.0), 2)
+            self.totalAnticipos = round(vals.get("totalAnticipos", 0.0), 2)
+            self.totalVenta = round(vals.get("totalVenta", 0.0), 2)
+
+            for documentoModificado in vals.get("documentosModificados", []):
+                self.documentosModificados.append(
+                    DocumentoRelacionado(
+                        documentoModificado.get("numero", ""),
+                        documentoModificado.get("tipoDocumento"),
+                    )
+                )
+            for documentoModificado in vals.get("documentosRelacionados", []):
+                self.documentosRelacionados.append(
+                    DocumentoRelacionado(
+                        documentoModificado.get("numero", ""),
+                        documentoModificado.get("tipoDocumento"),
+                    )
+                )
+            self.totalTributos = round(vals.get("totalTributos", 0.0), 2)
+
+            for tributo in vals.get("tributos", []):
                 self.tributos.append(Tributo(tributo))
-            
-            for detalle in vals.get('detalles', []):
-                self.detalles.append(Detalle(detalle))            
-            self.medioPago = MedioPago(vals.get("medioPago", {})) 
-            for anticipo in vals.get('anticipos', []):
-                self.anticipos.append(Anticipo(anticipo)) 
+
+            for detalle in vals.get("detalles", []):
+                self.detalles.append(Detalle(detalle))
+            self.medioPago = MedioPago(vals.get("medioPago", {}))
+            for anticipo in vals.get("anticipos", []):
+                self.anticipos.append(Anticipo(anticipo))
             self.notas = vals.get("notas")
 
-            if vals.get('detraccion'):
-                self.detraccion = Detraccion(vals.get('detraccion'))
-            if vals.get('retencion'):
-                self.retencion = Retencion(vals.get('retencion'))
+            if vals.get("detraccion"):
+                self.detraccion = Detraccion(vals.get("detraccion"))
+            if vals.get("retencion"):
+                self.retencion = Retencion(vals.get("retencion"))
 
-
-        elif self.tipoDocumento in ['09']:
-            self.observacion = vals.get('observacion')
-            self.fecEmision = datetime.strptime(vals.get('fecEmision', datetime.now(tz=pytz.timezone('America/Lima')).strftime("%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
-            self.emisor = Emisor(vals.get('emisor', {}))
-            for anulado in vals.get('documentosAnulados',[]):
+        elif self.tipoDocumento in ["09"]:
+            self.observacion = vals.get("observacion")
+            self.fecEmision = datetime.strptime(
+                vals.get(
+                    "fecEmision",
+                    datetime.now(tz=pytz.timezone("America/Lima")).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
+                ),
+                "%Y-%m-%d %H:%M:%S",
+            )
+            self.emisor = Emisor(vals.get("emisor", {}))
+            for anulado in vals.get("documentosAnulados", []):
                 self.documentosAnulados.append(DocumentoAnulado(**anulado))
-            for documentoModificado in vals.get('documentosRelacionados', []):
-                self.documentosRelacionados.append(DocumentoRelacionado(documentoModificado.get('numero',''), documentoModificado.get('tipoDocumento'),
-                                                                     documentoModificado.get('emisor', {})))
-            self.remitente = Adquirente(vals.get('remitente', {}))
-            self.destinatario = Adquirente(vals.get('destinatario', {}))
-            self.establecimientoTercero = vals.get('establecimientoTercero', {}) and Adquirente(vals.get('establecimientoTercero', {})) or vals.get('establecimientoTercero', {})
-            
+            for documentoModificado in vals.get("documentosRelacionados", []):
+                self.documentosRelacionados.append(
+                    DocumentoRelacionado(
+                        documentoModificado.get("numero", ""),
+                        documentoModificado.get("tipoDocumento"),
+                        documentoModificado.get("emisor", {}),
+                    )
+                )
+            self.remitente = Adquirente(vals.get("remitente", {}))
+            self.destinatario = Adquirente(vals.get("destinatario", {}))
+            self.establecimientoTercero = (
+                vals.get("establecimientoTercero", {})
+                and Adquirente(vals.get("establecimientoTercero", {}))
+                or vals.get("establecimientoTercero", {})
+            )
+
             # Datos de envio
-            self.motivo = vals.get('motivo', "")
+            self.motivo = vals.get("motivo", "")
             self.codSucursal = vals.get("codSucursal", "")
-            self.descripcion = vals.get('descripcion', "")
-            self.transbordo = vals.get('transbordo', False)
-            self.vehiculoM1L = vals.get('vehiculoM1L', False)
-            self.pesoBruto = vals.get('pesoBruto', 0.0)
-            self.pesoBrutoUnidad = vals.get('pesoBrutoUnidad', 'KGM')
-            self.bultos = vals.get('bultos', 0.0)
-            self.modoTraslado = vals.get('modoTraslado', "")
-            self.fechaTraslado = vals.get('fechaTraslado', "")
-            
-            for transportista in vals.get('transportistas', []):
+            self.descripcion = vals.get("descripcion", "")
+            self.transbordo = vals.get("transbordo", False)
+            self.vehiculoM1L = vals.get("vehiculoM1L", False)
+            self.pesoBruto = vals.get("pesoBruto", 0.0)
+            self.pesoBrutoUnidad = vals.get("pesoBrutoUnidad", "KGM")
+            self.bultos = vals.get("bultos", 0.0)
+            self.modoTraslado = vals.get("modoTraslado", "")
+            self.fechaTraslado = vals.get("fechaTraslado", "")
+
+            for transportista in vals.get("transportistas", []):
                 self.transportistas.append(Transportista(transportista))
             # VEHICULO (Transporte Privado)
-            self.placa = vals.get('placa', '')
-            
+            self.placa = vals.get("placa", "")
+
             # CONDUCTOR (Transporte Privado)
-            #self.conductor = Adquirente(vals.get('conductor', {}))
-            
+            # self.conductor = Adquirente(vals.get('conductor', {}))
+
             # Direccion punto de llegada
-            self.ubigeoLlegada = vals.get('ubigeoLlegada', '')
-            self.direccionLlegada = vals.get('direccionLlegada', '')[:100]
-            self.codSucursalLlegada = vals.get("codSucursalLlegada", '')
-            self.rucLlegada = vals.get("rucLlegada","")
+            self.ubigeoLlegada = vals.get("ubigeoLlegada", "")
+            self.direccionLlegada = vals.get("direccionLlegada", "")[:100]
+            self.codSucursalLlegada = vals.get("codSucursalLlegada", "")
+            self.rucLlegada = vals.get("rucLlegada", "")
 
             # Datos del vehículos
-            for vehiculo in vals.get('vehículos', []):
+            for vehiculo in vals.get("vehículos", []):
                 self.vehículos.append(Vehiculo(vehiculo))
-                self.placa = vals.get('placa', '')
-            
+                self.placa = vals.get("placa", "")
+
             # Datos del contenedor (Motivo Importación)
-            self.contenedor = vals.get('contenedor', '')
-            
+            self.contenedor = vals.get("contenedor", "")
+
             # Direccion del punto de partida
-            self.ubigeoPartida = vals.get("ubigeoPartida", '')
-            self.direccionPartida = vals.get('direccionPartida', '')[:100]
-            self.codSucursalPartida = vals.get("codSucursalPartida", '')
+            self.ubigeoPartida = vals.get("ubigeoPartida", "")
+            self.direccionPartida = vals.get("direccionPartida", "")[:100]
+            self.codSucursalPartida = vals.get("codSucursalPartida", "")
             self.rucPartida = vals.get("rucPartida", "")
 
             # Puerto o Aeropuerto de embarque/desembarque
             self.puerto = vals.get("puerto", "")
-            
+
             # BIENES A TRANSPORTAR
-            for detalle in vals.get('detalles', []):
+            for detalle in vals.get("detalles", []):
                 self.detalles.append(DetalleBienes(detalle))
         # Retencion
-        elif self.tipoDocumento in ['20']:
-            self.emisor = Emisor(vals.get('emisor', {}))
-            self.adquirente = Adquirente(vals.get('adquirente', {}))
+        elif self.tipoDocumento in ["20"]:
+            self.emisor = Emisor(vals.get("emisor", {}))
+            self.adquirente = Adquirente(vals.get("adquirente", {}))
             try:
-                self.fecEmision = datetime.strptime(vals.get('fecEmision',
-                                                             datetime.now(tz=pytz.timezone('America/Lima')).strftime(
-                                                                 "%Y-%m-%d")), "%Y-%m-%d")
+                self.fecEmision = datetime.strptime(
+                    vals.get(
+                        "fecEmision",
+                        datetime.now(tz=pytz.timezone("America/Lima")).strftime(
+                            "%Y-%m-%d"
+                        ),
+                    ),
+                    "%Y-%m-%d",
+                )
             except Exception as e:
-                raise LibreCpeError("fecEmision", "No esta definido o no cumple el formato 'AAA-mm-dd HH:MM:SS': %s" % str(e))
+                raise LibreCpeError(
+                    "fecEmision",
+                    "No esta definido o no cumple el formato 'AAA-mm-dd HH:MM:SS': %s"
+                    % str(e),
+                )
 
-            self.codigoRetencion = vals.get('codigoRetencion', '')
+            self.codigoRetencion = vals.get("codigoRetencion", "")
 
-            self.porcentajeRetencion = round(vals.get('porcentajeRetencion', 0.0), 2)
-            self.totalRetencion = round(vals.get('totalRetencion', 0.0), 2)
-            self.totalNetoPagado = round(vals.get('totalNetoPagado', 0.0), 2)
-            self.tipMoneda = vals.get('tipMoneda', '')
-            for detalle in vals.get('detalles', []):
+            self.porcentajeRetencion = round(vals.get("porcentajeRetencion", 0.0), 2)
+            self.totalRetencion = round(vals.get("totalRetencion", 0.0), 2)
+            self.totalNetoPagado = round(vals.get("totalNetoPagado", 0.0), 2)
+            self.tipMoneda = vals.get("tipMoneda", "")
+            for detalle in vals.get("detalles", []):
                 self.detalles.append(RetencionDetalle(detalle))
-        elif self.tipoDocumento in ['rr']:
-            self.emisor = Emisor(vals.get('emisor', {}))
+        elif self.tipoDocumento in ["rr"]:
+            self.emisor = Emisor(vals.get("emisor", {}))
             try:
-                self.fecEmision = datetime.strptime(vals.get('fecEmision',
-                                                             datetime.now(tz=pytz.timezone('America/Lima')).strftime(
-                                                                 "%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
+                self.fecEmision = datetime.strptime(
+                    vals.get(
+                        "fecEmision",
+                        datetime.now(tz=pytz.timezone("America/Lima")).strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        ),
+                    ),
+                    "%Y-%m-%d %H:%M:%S",
+                )
             except Exception as e:
-                raise LibreCpeError("fecEmision", "No esta definido o no cumple el formato 'AAA-mm-dd HH:MM:SS': %s" % str(e))
+                raise LibreCpeError(
+                    "fecEmision",
+                    "No esta definido o no cumple el formato 'AAA-mm-dd HH:MM:SS': %s"
+                    % str(e),
+                )
 
             try:
-                self.fecEnvio = datetime.strptime(vals.get('fecEnvio',
-                                                           datetime.now(tz=pytz.timezone('America/Lima')).strftime(
-                                                               "%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
+                self.fecEnvio = datetime.strptime(
+                    vals.get(
+                        "fecEnvio",
+                        datetime.now(tz=pytz.timezone("America/Lima")).strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        ),
+                    ),
+                    "%Y-%m-%d %H:%M:%S",
+                )
             except Exception as e:
-                raise LibreCpeError("fecEnvio", "No esta definido o no cumple el formato 'AAA-mm-dd HH:MM:SS': %s" % str(e))
-            for anulado in vals.get('documentosAnulados', []):
+                raise LibreCpeError(
+                    "fecEnvio",
+                    "No esta definido o no cumple el formato 'AAA-mm-dd HH:MM:SS': %s"
+                    % str(e),
+                )
+            for anulado in vals.get("documentosAnulados", []):
                 self.documentosAnulados.append(DocumentoAnulado(**anulado))
 
     def getDocumento(self, key=None, cer=None, xml=None, nombre_documento=None):
         vals = {}
-        if self.servidor in ['SUNAT']:
+        if self.servidor in ["SUNAT"]:
             if not key:
-                raise LibreCpeError("certificado", "No esta definido el certificado/Clave Privada")
+                raise LibreCpeError(
+                    "certificado", "No esta definido el certificado/Clave Privada"
+                )
             if not cer:
-                raise LibreCpeError("certificado", "No esta definido el certificado/Clave Publica")
+                raise LibreCpeError(
+                    "certificado", "No esta definido el certificado/Clave Publica"
+                )
             librecpe = LibreCPE(self)
-            if xml and not type(xml) == bytes:
-                xml=xml.encode('utf-8')
+            if xml and not isinstance(xml, bytes):
+                xml = xml.encode("utf-8")
             xml, xml_firmado = librecpe.getDocumento(key, cer, xml)
             resumen, firma = librecpe.getFirma(xml_firmado)
-            vals['xml'] = encodebytes(xml)
-            vals['xml_firmado'] = encodebytes(xml_firmado)
-            vals['resumen'] = resumen
-            vals['firma'] = firma
+            vals["xml"] = encodebytes(xml)
+            vals["xml_firmado"] = encodebytes(xml_firmado)
+            vals["resumen"] = resumen
+            vals["firma"] = firma
             if nombre_documento:
                 cliente = Cliente()
-                vals['hashqr'] = cliente.generarHashqr(nombre_documento, xml)
+                vals["hashqr"] = cliente.generarHashqr(nombre_documento, xml)
         return vals
-    
+
     def enviarDocumento(self, servidor, nombre_documento=None, tipo=None, xml=None):
         servidor_obj = Servidor()
         servidor_obj.setServidor(servidor)
-        if servidor_obj.servidor in ['sunat']:
-            ruc = servidor.get('ruc')
+        if servidor_obj.servidor in ["sunat"]:
+            ruc = servidor.get("ruc")
             cliente_soap = ClienteCpe(ruc, servidor_obj, tipo)
             cliente = Cliente()
             xml = decodebytes(xml)
-            zip, estado_respuesta, respuesta, datos_respuesta = cliente.procesar(document_name=nombre_documento, type=tipo, xml=xml, client=cliente_soap)
-            return {'estado': estado_respuesta, 'respuesta':respuesta, 'datos_respuesta': datos_respuesta}
-        elif servidor_obj.servidor in ['nubefact_pse']:
+            zip, estado_respuesta, respuesta, datos_respuesta = cliente.procesar(
+                document_name=nombre_documento, type=tipo, xml=xml, client=cliente_soap
+            )
+            return {
+                "estado": estado_respuesta,
+                "respuesta": respuesta,
+                "datos_respuesta": datos_respuesta,
+            }
+        elif servidor_obj.servidor in ["nubefact_pse"]:
             nubefact = NubeFactPSE(self)
-            if tipo == 'ra':
+            if tipo == "ra":
                 return nubefact.anularDocumento(servidor_obj)
-            else: 
+            else:
                 return nubefact.enviarDocumento(servidor_obj)
         else:
             return {}
 
-    def obtenerEstadoDocumento(self, soap, nombre_documento, tipo, ticket = None):
-        ruc = soap.get('ruc')
+    def obtenerEstadoDocumento(self, soap, nombre_documento, tipo, ticket=None):
+        ruc = soap.get("ruc")
         servidor = Servidor()
         servidor.setServidor(soap)
-        if servidor.servidor in ['sunat']:
+        if servidor.servidor in ["sunat"]:
             cliente_soap = ClienteCpe(ruc, servidor, tipo)
             cliente = Cliente()
-            zip, estado_respuesta, respuesta, datos_respuesta  = cliente.get_status(document_name=nombre_documento, type=tipo, client=cliente_soap, ticket=ticket)
-            return {'estado': estado_respuesta, 'respuesta':respuesta, 'datos_respuesta': datos_respuesta}
-        elif servidor.servidor in ['nubefact_pse']:
+            zip, estado_respuesta, respuesta, datos_respuesta = cliente.get_status(
+                document_name=nombre_documento,
+                type=tipo,
+                client=cliente_soap,
+                ticket=ticket,
+            )
+            return {
+                "estado": estado_respuesta,
+                "respuesta": respuesta,
+                "datos_respuesta": datos_respuesta,
+            }
+        elif servidor.servidor in ["nubefact_pse"]:
             nubefact = NubeFactPSE(self)
             return nubefact.estadoDocumento(servidor, nombre_documento, tipo)
 
     def obtenerRespuesta(self, file, name):
         cliente = Cliente()
-        codigo, descripcion, respuesta, nota, documento = cliente.obtenerRespuesta(file, name)
-        return {'codigo': codigo, 'descripcion': descripcion, 'respuesta':respuesta, 'nota': nota, 'documento': documento}
+        codigo, descripcion, respuesta, nota, documento = cliente.obtenerRespuesta(
+            file, name
+        )
+        return {
+            "codigo": codigo,
+            "descripcion": descripcion,
+            "respuesta": respuesta,
+            "nota": nota,
+            "documento": documento,
+        }
+
 
 class DetalleBienes:
-    
+
     def __init__(self, vals=None):
         vals = vals or {}
-        
-        self.cantidad = round(vals.get('cantidad', 0.0), 10)
-        self.codUnidadMedida = vals.get('codUnidadMedida', 'NIU')
-        self.descripcion = vals.get('descripcion', '').replace("\n", " ")[:250].strip()
-        self.codProducto = vals.get('codProducto', '')
+
+        self.cantidad = round(vals.get("cantidad", 0.0), 10)
+        self.codUnidadMedida = vals.get("codUnidadMedida", "NIU")
+        self.descripcion = vals.get("descripcion", "").replace("\n", " ")[:250].strip()
+        self.codProducto = vals.get("codProducto", "")
+
 
 class Vehiculo:
     def __init__(self, vals=None):
         vals = vals or {}
-        self.principal = vals.get('principal', False)
-        self.placa = vals.get('placa')
+        self.principal = vals.get("principal", False)
+        self.placa = vals.get("placa")
+
 
 class TotalOperaciones:
-    
-    def __init__(self, codigo='', total=0.0):
-        self.total = round(total,2)
+
+    def __init__(self, codigo="", total=0.0):
+        self.total = round(total, 2)
         self.codigo = codigo
 
 
 class DocumentoAnulado:
-    def __init__(self, numero='', tipoDocumento='', descripcion=''):
+    def __init__(self, numero="", tipoDocumento="", descripcion=""):
         self.tipoDocumento = tipoDocumento
         self.descripcion = descripcion
         self.validar_numero(numero)
-        self.numero = numero.split('-')[-1]
-        self.serie = numero.split('-')[0]
-    
+        self.numero = numero.split("-")[-1]
+        self.serie = numero.split("-")[0]
+
     def validar_numero(self, numero):
-        if self.tipoDocumento in ['01','03','07','08']:
-            if not re.match(r'^(B|F){1}[A-Z0-9]{3}\-\d+$', numero):
-                raise LibreCpeError("documentosAnulados/numero", "El numero del documento ingresado no cumple con el estandar.\nEjemplo F001-0001 o BN01-0001")
-        if self.tipoDocumento in ['09']:
-            if not re.match(r'^(T|E){1}[A-Z0-9]{3}\-\d+$', numero):
-                raise LibreCpeError("documentosAnulados/numero", "El numero del documento ingresado no cumple con el estandar.\nEjemplo F001-0001 o BN01-0001")
-        
+        if self.tipoDocumento in ["01", "03", "07", "08"]:
+            if not re.match(r"^(B|F){1}[A-Z0-9]{3}\-\d+$", numero):
+                raise LibreCpeError(
+                    "documentosAnulados/numero",
+                    "El numero del documento ingresado no cumple con el estandar.\nEjemplo F001-0001 o BN01-0001",
+                )
+        if self.tipoDocumento in ["09"]:
+            if not re.match(r"^(T|E){1}[A-Z0-9]{3}\-\d+$", numero):
+                raise LibreCpeError(
+                    "documentosAnulados/numero",
+                    "El numero del documento ingresado no cumple con el estandar.\nEjemplo F001-0001 o BN01-0001",
+                )
+
 
 class DocumentoRelacionado:
-    def __init__(self, numero='', tipoDocumento='', emisor=None):
+    def __init__(self, numero="", tipoDocumento="", emisor=None):
         self.tipoDocumento = tipoDocumento
         self.numero = numero
         self.emisor = emisor and Emisor(emisor) or []
+
 
 class Detalle:
 
     def __init__(self, vals=None):
         vals = vals or {}
-        self.codUnidadMedida = vals.get('codUnidadMedida', 'NIU')
-        self.cantidad = round(vals.get('cantidad', 0.0), 10)
-        self.codProducto = vals.get('codProducto', '')
-        self.codProductoSUNAT = vals.get('codProductoSUNAT', '')
-        self.codProductoGTIN = vals.get('codProductoGTIN', '')
-        self.tipoProductoGTIN = vals.get('tipoProductoGTIN', '')
-        self.descripcion = vals.get('descripcion', '').strip()
-        self.mtoValorUnitario = round(vals.get('mtoValorUnitario', 0.0), 10)
-        self.sumTotTributosItem = round(vals.get('sumTotTributosItem', 0.0),2)
+        self.codUnidadMedida = vals.get("codUnidadMedida", "NIU")
+        self.cantidad = round(vals.get("cantidad", 0.0), 10)
+        self.codProducto = vals.get("codProducto", "")
+        self.codProductoSUNAT = vals.get("codProductoSUNAT", "")
+        self.codProductoGTIN = vals.get("codProductoGTIN", "")
+        self.tipoProductoGTIN = vals.get("tipoProductoGTIN", "")
+        self.descripcion = vals.get("descripcion", "").strip()
+        self.mtoValorUnitario = round(vals.get("mtoValorUnitario", 0.0), 10)
+        self.sumTotTributosItem = round(vals.get("sumTotTributosItem", 0.0), 2)
         tributos = []
-        for tributo in vals.get('tributos', []):
+        for tributo in vals.get("tributos", []):
             tributos.append(Tributo(tributo))
         self.tributos = tributos
-        self.mtoPrecioVentaUnitario = round(vals.get('mtoPrecioVentaUnitario', 0.0),10)
-        self.mtoValorVentaItem = round(vals.get('mtoValorVentaItem', 0.0),2)
-        self.mtoValorReferencialUnitario = round(vals.get('mtoValorReferencialUnitario', 0.0),10)
-        
+        self.mtoPrecioVentaUnitario = round(vals.get("mtoPrecioVentaUnitario", 0.0), 10)
+        self.mtoValorVentaItem = round(vals.get("mtoValorVentaItem", 0.0), 2)
+        self.mtoValorReferencialUnitario = round(
+            vals.get("mtoValorReferencialUnitario", 0.0), 10
+        )
+
         cargoDescuentos = []
-        for cargoDescuento in vals.get('cargoDescuentos',[]):
+        for cargoDescuento in vals.get("cargoDescuentos", []):
             cargoDescuentos.append(CargoDescuento(cargoDescuento, True))
         self.cargoDescuentos = cargoDescuentos
         # Afectación al IGV o IVAP cuando corresponda
-        self.tipAfectacion = vals.get('tipAfectacion', '')
+        self.tipAfectacion = vals.get("tipAfectacion", "")
         # Placa de vehiculo
-        self.placa = vals.get('placa', "")
-        #Tipo de sistema de ISC
-        self.tipISC = vals.get('tipISC', "")
+        self.placa = vals.get("placa", "")
+        # Tipo de sistema de ISC
+        self.tipISC = vals.get("tipISC", "")
 
     def validate(self):
         if not self.tributos:
@@ -439,50 +580,61 @@ class Detalle:
                 sumTotTributosItem += tributo.montoTributo
             self.sumTotTributosItem = round(sumTotTributosItem, 2)
 
-            
+
 class Leyenda:
-    
-    def __init__(self, codLeyenda='', desLeyenda=''):
+
+    def __init__(self, codLeyenda="", desLeyenda=""):
         self.codLeyenda = codLeyenda
         self.desLeyenda = desLeyenda
 
-    
+
 class CargoDescuento:
-    
-    def __init__(self, vals=None, item = False):
+
+    def __init__(self, vals=None, item=False):
         vals = vals or {}
-        self.tipo = vals.get('tipo', 'descuento')
-        if vals.get('tipo', '') == 'cargo':
-            self.indicador = 'true'
+        self.tipo = vals.get("tipo", "descuento")
+        if vals.get("tipo", "") == "cargo":
+            self.indicador = "true"
         else:
-            self.indicador = 'false'
-        self.codigo = vals.get('codigo') or (item and '00') or '02'
-        self.monto = round(vals.get('monto', 0.0), 2)
-        self.base = round(vals.get('base', 0.0), 2)
-        if not vals.get('porcentaje', 0.0):
-            self.porcentaje = round(vals.get('monto', 0.0)/(vals.get('base', 0.0) or 1),5)
+            self.indicador = "false"
+        self.codigo = vals.get("codigo") or (item and "00") or "02"
+        self.monto = round(vals.get("monto", 0.0), 2)
+        self.base = round(vals.get("base", 0.0), 2)
+        if not vals.get("porcentaje", 0.0):
+            self.porcentaje = round(
+                vals.get("monto", 0.0) / (vals.get("base", 0.0) or 1), 5
+            )
         else:
-            self.porcentaje = round(vals.get('porcentaje', 0.0), 5)
-        
+            self.porcentaje = round(vals.get("porcentaje", 0.0), 5)
+
     def validate(self):
         if self.monto == 0.0:
             raise LibreCpeError("cargoDescuento/monto", "Debe ser mayo que 0.0")
         if self.base == 0.0:
             raise LibreCpeError("cargoDescuento/base", "Debe ser mayo que 0.0")
-        
+
 
 class Tributo:
-    
+
     def __init__(self, vals=None):
         vals = vals or {}
-        self.ideTributo = vals.get('ideTributo', '')
-        self.nomTributo = vals.get('nomTributo', '')
-        self.codTipTributo = vals.get('codTipTributo', '')
-        self.montoTributo = vals.get('montoTributo', 0.0)
-        self.baseTributo = vals.get('baseTributo', 0.0)
-        self.procentaje = vals.get('procentaje', 0.0)
-        if vals.get('ideTributo', '') == '7152':
-            self.cantidad = vals.get('cantidad') and vals.get('cantidad') or int(round(vals.get('montoTributo', 0.0)/(vals.get('procentaje', 0.0) or 1)))
+        self.ideTributo = vals.get("ideTributo", "")
+        self.nomTributo = vals.get("nomTributo", "")
+        self.codTipTributo = vals.get("codTipTributo", "")
+        self.montoTributo = vals.get("montoTributo", 0.0)
+        self.baseTributo = vals.get("baseTributo", 0.0)
+        self.procentaje = vals.get("procentaje", 0.0)
+        if vals.get("ideTributo", "") == "7152":
+            self.cantidad = (
+                vals.get("cantidad")
+                and vals.get("cantidad")
+                or int(
+                    round(
+                        vals.get("montoTributo", 0.0)
+                        / (vals.get("procentaje", 0.0) or 1)
+                    )
+                )
+            )
         else:
             self.cantidad = 0
 
@@ -494,95 +646,103 @@ class Guia:
         self.numero = vals.get("numero")
         self.tipoDocumento = vals.get("tipoDocumento", "09")
 
+
 class MedioPago:
     def __init__(self, vals=None):
         vals = vals or {}
-        self.tipo = vals.get('tipo', 'Contado')
+        self.tipo = vals.get("tipo", "Contado")
         monto = 0
         cuotas = []
         for cuota in vals.get("cuotas", []):
-            monto += cuota.get('monto', 0.0)
+            monto += cuota.get("monto", 0.0)
             cuotas.append(Cuota(cuota))
         self.cuotas = cuotas
-        self.monto = round(monto,2)
+        self.monto = round(monto, 2)
+
 
 class Cuota:
-    
+
     def __init__(self, vals=None):
         vals = vals or {}
-        self.monto = round(vals.get('monto', 0.0),2)
-        self.fecha = vals.get('fecha', '')
-        #self.nombre = vals.get('nombre', '')
+        self.monto = round(vals.get("monto", 0.0), 2)
+        self.fecha = vals.get("fecha", "")
+        # self.nombre = vals.get('nombre', '')
+
 
 class Anticipo:
     def __init__(self, vals=None):
         vals = vals or {}
-        self.numero = vals.get('numero', '')
-        self.tipoDocumento = vals.get('tipoDocumento', '')
-        self.tipoCodigo = vals.get('tipoCodigo', '')
+        self.numero = vals.get("numero", "")
+        self.tipoDocumento = vals.get("tipoDocumento", "")
+        self.tipoCodigo = vals.get("tipoCodigo", "")
         if not self.tipoCodigo and self.tipoDocumento:
-            if self.tipoDocumento == '01':
-                self.tipoCodigo = '02'
-            elif self.tipoDocumento == '03':
-                self.tipoCodigo = '03'
-        self.monto = round(vals.get('monto', 0.0),2)
-        #self.impuestos = round(vals.get('impuestos', 0.0),2)
-        self.fecha = vals.get('fecha', '')
+            if self.tipoDocumento == "01":
+                self.tipoCodigo = "02"
+            elif self.tipoDocumento == "03":
+                self.tipoCodigo = "03"
+        self.monto = round(vals.get("monto", 0.0), 2)
+        # self.impuestos = round(vals.get('impuestos', 0.0),2)
+        self.fecha = vals.get("fecha", "")
         self.tributos = []
-        for tributo in vals.get('tributos', []):
+        for tributo in vals.get("tributos", []):
             self.tributos.append(Tributo(tributo))
+
 
 class Detraccion:
 
     def __init__(self, vals=None):
         vals = vals or {}
-        self.cuentaBanco = vals.get('cuentaBanco')
-        self.medioPago = vals.get('medioPago', '001')
-        self.codigo = vals.get('codigo', '')
-        self.monto = round(vals.get('monto', 0.0), 2)
-        self.porcentaje = round(vals.get('porcentaje', 0.0), 5)
+        self.cuentaBanco = vals.get("cuentaBanco")
+        self.medioPago = vals.get("medioPago", "001")
+        self.codigo = vals.get("codigo", "")
+        self.monto = round(vals.get("monto", 0.0), 2)
+        self.porcentaje = round(vals.get("porcentaje", 0.0), 5)
+
 
 class Retencion:
     def __init__(self, vals=None):
         vals = vals or {}
-        self.codigo = vals.get('codigo', '')
-        self.base = round(vals.get('base', 0.0), 2)
-        self.monto = round(vals.get('monto', 0.0), 2)
-        self.porcentaje = round(vals.get('porcentaje', 0.0)/100, 5)
+        self.codigo = vals.get("codigo", "")
+        self.base = round(vals.get("base", 0.0), 2)
+        self.monto = round(vals.get("monto", 0.0), 2)
+        self.porcentaje = round(vals.get("porcentaje", 0.0) / 100, 5)
+
 
 # Retencion
 class RetencionDetalle:
     def __init__(self, vals=None):
         vals = vals or {}
-        self.numero = vals.get('numero', '')
-        self.tipoDocumento = vals.get('tipoDocumento', '')
-        self.fechaFactura = vals.get('fechaFactura', '')
-        self.monedaFactura = vals.get('monedaFactura', '')
-        self.monedaRetencion = vals.get('monedaRetencion', '')
-        self.totalFactura = round(vals.get('totalFactura', 0.0), 2)
-        self.totalRetencion = round(vals.get('totalRetencion', 0.0), 2)
-        self.totalPagoRetencion = round(vals.get('totalPagoRetencion', 0.0), 2)
+        self.numero = vals.get("numero", "")
+        self.tipoDocumento = vals.get("tipoDocumento", "")
+        self.fechaFactura = vals.get("fechaFactura", "")
+        self.monedaFactura = vals.get("monedaFactura", "")
+        self.monedaRetencion = vals.get("monedaRetencion", "")
+        self.totalFactura = round(vals.get("totalFactura", 0.0), 2)
+        self.totalRetencion = round(vals.get("totalRetencion", 0.0), 2)
+        self.totalPagoRetencion = round(vals.get("totalPagoRetencion", 0.0), 2)
         pagos = []
-        for pago in vals.get('pagos', []):
+        for pago in vals.get("pagos", []):
             pagos.append(RetencionDetallePagos(pago))
         self.pagos = pagos
         tasatasaCambios = []
-        for tasa in vals.get('tasatasaCambios', []):
+        for tasa in vals.get("tasatasaCambios", []):
             tasatasaCambios.append(RetencionDetalleTasa(tasa))
         self.tasatasaCambios = tasatasaCambios
+
 
 class RetencionDetallePagos:
     def __init__(self, vals=None):
         vals = vals or {}
-        self.numeroPago = vals.get('numeroPago', 1)
-        self.moneda = vals.get('moneda', '')
-        self.fecha = vals.get('fecha', '')
-        self.monto = round(vals.get('monto', 0.0), 2)
+        self.numeroPago = vals.get("numeroPago", 1)
+        self.moneda = vals.get("moneda", "")
+        self.fecha = vals.get("fecha", "")
+        self.monto = round(vals.get("monto", 0.0), 2)
+
 
 class RetencionDetalleTasa:
     def __init__(self, vals=None):
         vals = vals or {}
-        self.fecha = vals.get('fecha', '')
-        self.moneda = vals.get('moneda', 'PEN')
-        self.monedaDestino = vals.get('monedaDestino', 'PEN')
-        self.tasaCambio = round(vals.get('tasaCambio', 0.0), 4)
+        self.fecha = vals.get("fecha", "")
+        self.moneda = vals.get("moneda", "PEN")
+        self.monedaDestino = vals.get("monedaDestino", "PEN")
+        self.tasaCambio = round(vals.get("tasaCambio", 0.0), 4)

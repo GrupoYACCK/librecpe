@@ -1,30 +1,22 @@
-
 class Servidor:
-    
-    def __init__(self, ):
+
+    def __init__(
+        self,
+    ):
         self.servidores = {
-            'sunat':'SUNAT',
-            'nubefact_pse':'NubeFact PSE',
-            'nubefact_ose':'NubeFact OSE',
-            'otros':'Otros'
+            "sunat": "SUNAT",
+            "nubefact_pse": "NubeFact PSE",
+            "nubefact_ose": "NubeFact OSE",
+            "otros": "Otros",
         }
         self.webservices = {
-            'sunat' : {
-                'desarrollo': {
-
+            "sunat": {"desarrollo": {}, "produccion": {}},
+            "nubefact_ose": {
+                "desarrollo": {
+                    "cpe": "https://demo-ose.nubefact.com/ol-ti-itcpe/billService?wsdl"
                 },
-                'produccion': {
-                    
-                }
+                "produccion": {},
             },
-            'nubefact_ose': {
-                'desarrollo': {
-                    'cpe': 'https://demo-ose.nubefact.com/ol-ti-itcpe/billService?wsdl'
-                },
-                'produccion': {
-
-                }
-            }
         }
 
     def getWebserviceServidores(self, servidor, tipo):
@@ -33,16 +25,16 @@ class Servidor:
     def getServidores(self):
         res = []
         for codigo, nombre in self.servidores.items():
-            res.append((codigo,nombre))
+            res.append((codigo, nombre))
         return res
-    
+
     def setServidor(self, vals=None):
         vals = vals or {}
-        self.servidor = vals.get('servidor', 'sunat')
-        self.url = vals.get('url', '')
-        self.usuario = vals.get('usuario', '')
-        self.clave = vals.get('clave', '')
-        self.idCliente = vals.get('idCliente', '')
-        self.claveCliente = vals.get('claveCliente', '')
-        self.clientePython = vals.get('clientePython', 'zeep')
+        self.servidor = vals.get("servidor", "sunat")
+        self.url = vals.get("url", "")
+        self.usuario = vals.get("usuario", "")
+        self.clave = vals.get("clave", "")
+        self.idCliente = vals.get("idCliente", "")
+        self.claveCliente = vals.get("claveCliente", "")
+        self.clientePython = vals.get("clientePython", "zeep")
         return self
