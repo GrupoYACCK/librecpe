@@ -5,12 +5,9 @@ import io
 import zipfile
 import base64
 
-#from pysimplesoap.client import SoapClient, SoapFault
-
 from zeep.wsse.username import UsernameToken
 from zeep import Client, Settings
 from zeep.transports import Transport
-from pysimplesoap.client import SoapClient, SoapFault
 
 from lxml import etree
 import logging
@@ -377,20 +374,7 @@ class ClienteCpe(object):
 
     def _connect(self):
         if self.tipo != 'guia':
-            if self._clientePython == 'pysimplesoap':
-                try:
-                    self._client = SoapClient(wsdl=self._url, cache=None, ns='tzmed', soap_ns='soapenv',
-                                              soap_server="jbossas6",
-                                              trace=True)  # SoapClient(location=self._location, action= self._soapaction, namespace=self._namespace)
-                    self._client['wsse:Security'] = {
-                        'wsse:UsernameToken': {
-                            'wsse:Username': self._username,
-                            'wsse:Password': self._password
-                        }
-                    }
-                except Exception:
-                    self._client = False
-            elif self._clientePython == 'zeep':
+            if self._clientePython in ['zeep', 'pysimplesoap']:
                 try:
                     settings = Settings(raw_response=True)
                     transport = Transport(operation_timeout=15, timeout=15)
@@ -431,15 +415,7 @@ class ClienteCpe(object):
                 return False, {}
         if not self._client:
             return False, {}
-        if self._clientePython == 'pysimplesoap':
-            try:
-                service = getattr(self._client, name)
-                return True, service(**params)
-            except SoapFault as ex:
-                return False, {'faultcode': ex.faultcode, 'faultstring': ex.faultstring}
-            except Exception as e:
-                return False, {}
-        elif self._clientePython == 'zeep':
+        if self._clientePython in ['zeep', 'pysimplesoap']:
             try:
                 service = getattr(self._client, name)
                 result = service(**params)
