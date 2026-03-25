@@ -7,13 +7,13 @@ if os.path.exists(README_PATH):
     with open(README_PATH) as readme:
         LONG_DESC = readme.read()
 
-INSTALL_REQUIRES = ['lxml','xmlsec','pysimplesoap','pytz', 'zeep']
+INSTALL_REQUIRES = ['lxml','xmlsec','pytz', 'zeep']
 PACKAGE_NAME = 'librecpe'
 PACKAGE_DIR = 'src'
 
 setup(
     name=PACKAGE_NAME,
-    version='2.0.0',
+    version='3.0.0',
     author='Alex Cuellar',
     author_email='acuellar@grupoyacck.com',
     maintainer='Alex Cuellar',
