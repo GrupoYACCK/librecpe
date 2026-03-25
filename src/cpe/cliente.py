@@ -73,7 +73,37 @@ class Cliente(object):
         hashqr = hashlib.sha256(self.in_memory_data.getvalue()).hexdigest()
         return hashqr
 
-    def procesarRespuesta(self):
+    def _extraer_zip(self, zip_file, name):
+        try:
+            zf = zipfile.ZipFile(BytesIO(base64.decodebytes(zip_file.encode('utf-8'))))
+            xml = zf.open(name).read()
+            return xml
+        except Exception:
+            return False
+
+    def _generar_zip(self, xml_name, xml, r_zip):
+        if not xml:
+            return None
+        if not r_zip:
+            return None
+        try:
+            in_memory_data = BytesIO()
+            in_memory_zip = zipfile.ZipFile(in_memory_data, "w", zipfile.ZIP_DEFLATED, False)
+            in_memory_zip.writestr(xml_name, xml)
+            if r_zip:
+                r_name = 'R-%s.xml' % (xml_name)
+                r_xml = self._extraer_zip(r_name, r_zip)
+                if r_xml:
+                    in_memory_zip.writestr(r_name, r_xml)
+            for zfile in in_memory_zip.filelist:
+                zfile.create_system = 0
+            in_memory_zip.close()
+            res = base64.encodebytes(in_memory_data.getvalue())
+            self._response_data = res
+        except Exception:
+            pass
+
+    def procesarRespuesta(self, xml_to_zip=False):
         if not self._response:
             if self._response_status:
                 self._response_status = False
@@ -82,6 +112,9 @@ class Cliente(object):
             try:
                 xml_filename = 'R-%s.xml' % (self._document_name)
                 codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(self._response_data, xml_filename)
+                if xml_to_zip:
+                    self._generar_zip(self._document_name, self._xml, self._response_data)
+
                 self._sunat_response.update(
                     {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota, 'documento': documento})
             except Exception:
@@ -100,6 +133,8 @@ class Cliente(object):
             try:
                 xml_filename = 'R-%s.xml' % (self._document_name)
                 codigo, descripcion, respuesta, nota, documento = self.obtenerRespuesta(self._response_data, xml_filename)
+                if xml_to_zip:
+                    self._generar_zip(self._document_name, self._xml, self._response_data)
                 self._sunat_response.update(
                     {'codigo': codigo, 'descripcion': descripcion, 'respuesta': respuesta, 'nota': nota, 'documento': documento})
             except Exception:
@@ -135,14 +170,14 @@ class Cliente(object):
             self._sunat_response = {'faultcode': '',
                                     "faultstring": str(self._response.get('error', ""))}
 
-    def procesar(self, document_name, type, xml, client):
+    def procesar(self, document_name, type, xml, client, xml_to_zip=False):
         self._xml = xml
         self._type = type
         self._document_name = document_name
         self._client = client
         self.preparaZip()
         self.enviar()
-        self.procesarRespuesta()
+        self.procesarRespuesta(xml_to_zip)
         return self._zip_file, self._response_status, self._sunat_response, self._response_data
 
     def obtenerRespuesta(self, file, name):
