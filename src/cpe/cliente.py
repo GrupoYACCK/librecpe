@@ -164,7 +164,7 @@ class Cliente(object):
             in_memory_zip.writestr(xml_name, xml)
             if r_zip:
                 r_name = 'R-%s.xml' % (xml_name)
-                r_xml = self._extraer_zip(r_name, r_zip)
+                r_xml = self._extraer_zip(r_zip, r_name)
                 if r_xml:
                     in_memory_zip.writestr(r_name, r_xml)
             for zfile in in_memory_zip.filelist:

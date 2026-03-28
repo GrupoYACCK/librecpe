@@ -8,22 +8,22 @@ from librecpe.nubefact import NubeFactPSE
 import re
 
 class Documento:
-    
+
     def __init__(self, servidor= None, tipo = None):
         self.servidor = servidor or 'SUNAT' # vals.get('servidor','sunat')
         self.tipo = tipo
         self.tipoCAmbio = 1
         self.numero = ""
         self.tipoDocumento = ""
-            
+
         self.emisor = Emisor()
         self.fecEmision = ""
         self.documentosAnulados = set()
         self.documentos = set()
-        
+
         self.tipMoneda = ''
         self.adquirente = Adquirente({})
-                    
+
         self.condicion = '1'
         self.motivo = ''
         self.codigoNota = ''
@@ -43,18 +43,18 @@ class Documento:
         self.guias = set()
         self.leyendas = set()
         self.cargoDescuentos = set()
-                    
+
         self.detalles = set()
-            
-        self.medioPago = MedioPago() 
-        
+
+        self.medioPago = MedioPago()
+
         self.observacion = ""
-        
+
         self.documentosRelacionados = set()
-            
+
         self.remitente = Adquirente()
         self.destinatario = Adquirente()
-        
+
         self.establecimientoTercero = Adquirente()
         self.codSucursal = ""
         self.descripcion = ""
@@ -65,24 +65,24 @@ class Documento:
         self.pesoBruto = 0.0
         self.pesoBrutoUnidad = 'KGM'
         self.bultos = 0.0
-        
+
         self.modoTraslado = ""
         self.fechaTraslado = ""
-        
+
         self.transportistas = set()
-        
+
         self.placa = ""
-        
+
         self.ubigeoLlegada = ''
         self.direccionLlegada = ""
-        
+
         self.vehículos = set()
-        
+
         self.contenedor = ''
-            
+
         self.ubigeoPartida = ''
         self.direccionPartida = ''
-            
+
         self.puerto = ''
         self.anticipos = set()
         self.notas = ''
@@ -107,14 +107,14 @@ class Documento:
     def setDocument(self, vals):
         self.numero = vals.get('numero', '')
         self.tipoDocumento = vals.get('tipoDocumento', '')
-            
+
         if self.tipo in ['rc', 'ra']:
             self.emisor = Emisor(vals.get('emisor', {}))
             try:
                 self.fecEmision = datetime.strptime(vals.get('fecEmision', datetime.now(tz=pytz.timezone('America/Lima')).strftime("%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
             except Exception:
                 raise LibreCpeError("fecEmision", "No esta defenifido o no cumple el formato 'AAA-mm-dd HH:MM:SS'")
-            
+
             if self.tipoDocumento in ['rc', 'ra']:
                 try:
                     self.fecEnvio = datetime.strptime(vals.get('fecEnvio', datetime.now(tz=pytz.timezone('America/Lima')).strftime("%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
@@ -169,28 +169,28 @@ class Documento:
                 self.cargoDescuentos.add(CargoDescuento(cargoDescuento))
             self.motivo = vals.get('motivo', '')
             self.codigoNota = vals.get('codigoNota', '')
-            
+
             self.totalValVenta = round(vals.get('totalValVenta', 0.0), 2)
             self.totalImpVenta = round(vals.get('totalImpVenta', 0.0), 2)
             self.totalDescuentos = round(vals.get('totalDescuentos', 0.0), 2)
             self.totalCargos = round(vals.get('totalCargos', 0.0), 2)
             self.totalAnticipos = round(vals.get('totalAnticipos', 0.0), 2)
             self.totalVenta = round(vals.get('totalVenta', 0.0), 2)
-                        
+
             for documentoModificado in vals.get('documentosModificados', []):
                 self.documentosModificados.add(DocumentoRelacionado(documentoModificado.get('numero',''), documentoModificado.get('tipoDocumento')))
             for documentoModificado in vals.get('documentosRelacionados', []):
                 self.documentosRelacionados.add(DocumentoRelacionado(documentoModificado.get('numero',''), documentoModificado.get('tipoDocumento')))
             self.totalTributos = round(vals.get('totalTributos', 0.0), 2)
-            
+
             for tributo in vals.get('tributos', []):
                 self.tributos.add(Tributo(tributo))
-            
+
             for detalle in vals.get('detalles', []):
-                self.detalles.add(Detalle(detalle))            
-            self.medioPago = MedioPago(vals.get("medioPago", {})) 
+                self.detalles.add(Detalle(detalle))
+            self.medioPago = MedioPago(vals.get("medioPago", {}))
             for anticipo in vals.get('anticipos', []):
-                self.anticipos.add(Anticipo(anticipo)) 
+                self.anticipos.add(Anticipo(anticipo))
             self.notas = vals.get("notas")
 
             if vals.get('detraccion'):
@@ -211,7 +211,7 @@ class Documento:
             self.remitente = Adquirente(vals.get('remitente', {}))
             self.destinatario = Adquirente(vals.get('destinatario', {}))
             self.establecimientoTercero = vals.get('establecimientoTercero', {}) and Adquirente(vals.get('establecimientoTercero', {})) or vals.get('establecimientoTercero', {})
-            
+
             # Datos de envio
             self.motivo = vals.get('motivo', "")
             self.codSucursal = vals.get("codSucursal", "")
@@ -223,15 +223,15 @@ class Documento:
             self.bultos = vals.get('bultos', 0.0)
             self.modoTraslado = vals.get('modoTraslado', "")
             self.fechaTraslado = vals.get('fechaTraslado', "")
-            
+
             for transportista in vals.get('transportistas', []):
                 self.transportistas.add(Transportista(transportista))
             # VEHICULO (Transporte Privado)
             self.placa = vals.get('placa', '')
-            
+
             # CONDUCTOR (Transporte Privado)
             #self.conductor = Adquirente(vals.get('conductor', {}))
-            
+
             # Direccion punto de llegada
             self.ubigeoLlegada = vals.get('ubigeoLlegada', '')
             self.direccionLlegada = vals.get('direccionLlegada', '')[:100]
@@ -242,10 +242,10 @@ class Documento:
             for vehículo in vals.get('vehículos', []):
                 self.vehículos.add(Vehículo(vehículo))
                 self.placa = vals.get('placa', '')
-            
+
             # Datos del contenedor (Motivo Importación)
             self.contenedor = vals.get('contenedor', '')
-            
+
             # Direccion del punto de partida
             self.ubigeoPartida = vals.get("ubigeoPartida", '')
             self.direccionPartida = vals.get('direccionPartida', '')[:100]
@@ -254,7 +254,7 @@ class Documento:
 
             # Puerto o Aeropuerto de embarque/desembarque
             self.puerto = vals.get("puerto", "")
-            
+
             # BIENES A TRANSPORTAR
             for detalle in vals.get('detalles', []):
                 self.detalles.add(DetalleBienes(detalle))
@@ -315,8 +315,8 @@ class Documento:
                 cliente = Cliente()
                 vals['hashqr'] = cliente.generarHashqr(nombre_documento, xml)
         return vals
-    
-    def enviarDocumento(self, servidor, nombre_documento=None, tipo=None, xml=None):
+
+    def enviarDocumento(self, servidor, nombre_documento=None, tipo=None, xml=None, xml_to_zip=False):
         servidor_obj = Servidor()
         servidor_obj.setServidor(servidor)
         if servidor_obj.servidor in ['sunat']:
@@ -324,13 +324,13 @@ class Documento:
             cliente_soap = ClienteCpe(ruc, servidor_obj, tipo)
             cliente = Cliente()
             xml = decodebytes(xml)
-            zip, estado_respuesta, respuesta, datos_respuesta = cliente.procesar(document_name=nombre_documento, type=tipo, xml=xml, client=cliente_soap)
+            zip, estado_respuesta, respuesta, datos_respuesta = cliente.procesar(document_name=nombre_documento, type=tipo, xml=xml, client=cliente_soap, xml_to_zip=xml_to_zip)
             return {'estado': estado_respuesta, 'respuesta':respuesta, 'datos_respuesta': datos_respuesta}
         elif servidor_obj.servidor in ['nubefact_pse']:
             nubefact = NubeFactPSE(self)
             if tipo == 'ra':
                 return nubefact.anularDocumento(servidor_obj)
-            else: 
+            else:
                 return nubefact.enviarDocumento(servidor_obj)
         else:
             return {}
@@ -354,9 +354,9 @@ class Documento:
         return {'codigo': codigo, 'descripcion': descripcion, 'respuesta':respuesta, 'nota': nota, 'documento': documento}
 
 class DetalleBienes:
-    
+
     def __init__(self, vals={}):
-        
+
         self.cantidad = round(vals.get('cantidad', 0.0), 10)
         self.codUnidadMedida = vals.get('codUnidadMedida', 'NIU')
         self.descripcion = vals.get('descripcion', '').replace("\n", " ")[:250].strip()
@@ -368,7 +368,7 @@ class Vehículo:
         self.placa = vals.get('placa')
 
 class TotalOperaciones:
-    
+
     def __init__(self, codigo='', total=0.0):
         self.total = round(total,2)
         self.codigo = codigo
@@ -381,7 +381,7 @@ class DocumentoAnulado:
         self.validar_numero(numero)
         self.numero = numero.split('-')[-1]
         self.serie = numero.split('-')[0]
-    
+
     def validar_numero(self, numero):
         if self.tipoDocumento in ['01','03','07','08']:
             if not re.match(r'^(B|F){1}[A-Z0-9]{3}\-\d+$', numero):
@@ -389,7 +389,7 @@ class DocumentoAnulado:
         if self.tipoDocumento in ['09']:
             if not re.match(r'^(T|E){1}[A-Z0-9]{3}\-\d+$', numero):
                 raise LibreCpeError("documentosAnulados/numero", "El numero del documento ingresado no cumple con el estandar.\nEjemplo F001-0001 o BN01-0001")
-        
+
 
 class DocumentoRelacionado:
     def __init__(self, numero='', tipoDocumento='', emisor=set()):
@@ -416,7 +416,7 @@ class Detalle:
         self.mtoPrecioVentaUnitario = round(vals.get('mtoPrecioVentaUnitario', 0.0),10)
         self.mtoValorVentaItem = round(vals.get('mtoValorVentaItem', 0.0),2)
         self.mtoValorReferencialUnitario = round(vals.get('mtoValorReferencialUnitario', 0.0),10)
-        
+
         cargoDescuentos = []
         for cargoDescuento in vals.get('cargoDescuentos',[]):
             cargoDescuentos.append(CargoDescuento(cargoDescuento, True))
@@ -437,16 +437,16 @@ class Detalle:
                 sumTotTributosItem += tributo.montoTributo
             self.sumTotTributosItem = round(sumTotTributosItem, 2)
 
-            
+
 class Leyenda:
-    
+
     def __init__(self, codLeyenda='', desLeyenda=''):
         self.codLeyenda = codLeyenda
         self.desLeyenda = desLeyenda
 
-    
+
 class CargoDescuento:
-    
+
     def __init__(self, vals={}, item = False):
         self.tipo = vals.get('tipo', 'descuento')
         if vals.get('tipo', '') == 'cargo':
@@ -460,16 +460,16 @@ class CargoDescuento:
             self.porcentaje = round(vals.get('monto', 0.0)/(vals.get('base', 0.0) or 1),5)
         else:
             self.porcentaje = round(vals.get('porcentaje', 0.0), 5)
-        
+
     def validate(self):
         if self.monto == 0.0:
             raise LibreCpeError("cargoDescuento/monto", "Debe ser mayo que 0.0")
         if self.base == 0.0:
             raise LibreCpeError("cargoDescuento/base", "Debe ser mayo que 0.0")
-        
+
 
 class Tributo:
-    
+
     def __init__(self, vals={}):
         self.ideTributo = vals.get('ideTributo', '')
         self.nomTributo = vals.get('nomTributo', '')
@@ -501,7 +501,7 @@ class MedioPago:
         self.monto = round(monto,2)
 
 class Cuota:
-    
+
     def __init__(self, vals={}):
         self.monto = round(vals.get('monto', 0.0),2)
         self.fecha = vals.get('fecha', '')

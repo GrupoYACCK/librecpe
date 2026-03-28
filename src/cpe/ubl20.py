@@ -175,9 +175,14 @@ class Ubl20:
             tag = etree.QName(self._cbc, 'TaxAmount')   
             etree.SubElement(tax_subtotal, tag.text, currencyID=documento.tipMoneda, 
                              nsmap={'cbc':tag.namespace}).text=str(round(tributo.montoTributo,2))
-            tag = etree.QName(self._cac, 'TaxCategory')   
+
+            tag = etree.QName(self._cac, 'TaxCategory')
             category=etree.SubElement(tax_subtotal, tag.text, nsmap={'cac':tag.namespace})
-            tag = etree.QName(self._cac, 'TaxScheme')   
+
+            tag = etree.QName(self._cbc, 'Percent')
+            etree.SubElement(category, tag.text, nsmap={'cbc': tag.namespace}).text = str(
+                round(tributo.procentaje, 2))
+            tag = etree.QName(self._cac, 'TaxScheme')
             scheme=etree.SubElement(category, tag.text, nsmap={'cac':tag.namespace})
             tag = etree.QName(self._cbc, 'ID')
             etree.SubElement(scheme, tag.text, nsmap={'cbc':tag.namespace}).text=tributo.ideTributo
