@@ -17,6 +17,7 @@ import hashlib
 
 log = logging.getLogger(__name__)
 from lxml import etree
+from urllib.parse import urlparse
 
 def generar_xml_soap(username, password, method, **kwargs):
     # Namespaces
@@ -65,7 +66,7 @@ def generar_xml_soap(username, password, method, **kwargs):
 
     # Retornar XML formateado
     xml_soap = etree.tostring(envelope, pretty_print=True, xml_declaration=True, encoding="utf-8")
-    log.info(xml_soap)
+    log.info(str(xml_soap, 'utf-8'))
     return xml_soap
 
 def enviar_xml_soap(url, xml_soap):
@@ -73,8 +74,9 @@ def enviar_xml_soap(url, xml_soap):
         'Content-type': 'text/xml; charset="UTF-8"',
         'Content-length': str(len(xml_soap)),
     }
+    scheme, netloc, path, params, query, fragment = urlparse(url)
     try:
-        response = requests.post(url, data=xml_soap, headers=headers)
+        response = requests.post("%s://%s%s" %(scheme,netloc,path), data=xml_soap, headers=headers)
         return response
     except requests.exceptions.ConnectionError as e:
         log.info("Error de conexión: %s", e)
@@ -419,6 +421,7 @@ class ClienteCpe(object):
 
     @staticmethod
     def _process_soap_response(soap_response):
+        log.info(str(soap_response, 'utf-8'))
         if not soap_response:
             return {}
         response_tree = etree.fromstring(soap_response)
