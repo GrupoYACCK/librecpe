@@ -46,9 +46,9 @@ def generar_xml_soap(username, password, method, **kwargs):
     if method in ['sendBill', 'sendSummary', 'sendPack']:
         send_method = etree.SubElement(body, "{http://service.sunat.gob.pe}%s" % method)
         file_name = etree.SubElement(send_method, "fileName")
-        file_name.text = kwargs.get('filename')
+        file_name.text = kwargs.get('fileName')
         content_file = etree.SubElement(send_method, "contentFile")
-        content_file.text = kwargs.get('content_file')
+        content_file.text = kwargs.get('contentFile')
     elif method == 'getStatus':
         getstatus = etree.SubElement(body, "{http://service.sunat.gob.pe}getStatus")
         ticket = etree.SubElement(getstatus, "ticket")
