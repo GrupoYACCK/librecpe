@@ -5,19 +5,89 @@ import io
 import zipfile
 import base64
 
-#from pysimplesoap.client import SoapClient, SoapFault
-
 from zeep.wsse.username import UsernameToken
 from zeep import Client, Settings
 from zeep.transports import Transport
-from pysimplesoap.client import SoapClient, SoapFault
 
 from lxml import etree
 import logging
 import requests
+
 import hashlib
 
 log = logging.getLogger(__name__)
+from lxml import etree
+
+def generar_xml_soap(username, password, method, **kwargs):
+    # Namespaces
+    nsmap = {
+        'soapenv': 'http://schemas.xmlsoap.org/soap/envelope/',
+        'ser': 'http://service.sunat.gob.pe',
+        'wsse': 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd'
+    }
+
+    # Envelope
+    envelope = etree.Element("{http://schemas.xmlsoap.org/soap/envelope/}Envelope", nsmap=nsmap)
+
+    # Header
+    header = etree.SubElement(envelope, "{http://schemas.xmlsoap.org/soap/envelope/}Header")
+    security = etree.SubElement(header, "{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd}Security")
+    user_token = etree.SubElement(security, "{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd}UsernameToken")
+
+    user = etree.SubElement(user_token, "{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd}Username")
+    user.text = username
+
+    passwd = etree.SubElement(user_token, "{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd}Password")
+    passwd.text = password
+
+    # Body
+    body = etree.SubElement(envelope, "{http://schemas.xmlsoap.org/soap/envelope/}Body")
+    if method in ['sendBill', 'sendSummary', 'sendPack']:
+        send_method = etree.SubElement(body, "{http://service.sunat.gob.pe}%s" % method)
+        file_name = etree.SubElement(send_method, "fileName")
+        file_name.text = kwargs.get('filename')
+        content_file = etree.SubElement(send_method, "contentFile")
+        content_file.text = kwargs.get('content_file')
+    elif method == 'getStatus':
+        getstatus = etree.SubElement(body, "{http://service.sunat.gob.pe}getStatus")
+        ticket = etree.SubElement(getstatus, "ticket")
+        ticket.text = kwargs.get('ticket')
+    elif method == 'getStatusCdr':
+        getstatuscdr = etree.SubElement(body, "{http://service.sunat.gob.pe}getStatusCdr")
+        ruc_comprobante = etree.SubElement(getstatuscdr, "rucComprobante")
+        ruc_comprobante.text = kwargs.get('rucComprobante')
+        tipo_comprobante = etree.SubElement(getstatuscdr, "tipoComprobante")
+        tipo_comprobante.text = kwargs.get('tipoComprobante')
+        serie_comprobante = etree.SubElement(getstatuscdr, "serieComprobante")
+        serie_comprobante.text = kwargs.get('serieComprobante')
+        numero_comprobante = etree.SubElement(getstatuscdr, "numeroComprobante")
+        numero_comprobante.text = kwargs.get('numeroComprobante')
+
+    # Retornar XML formateado
+    xml_soap = etree.tostring(envelope, pretty_print=True, xml_declaration=True, encoding="utf-8")
+    log.info(xml_soap)
+    return xml_soap
+
+def enviar_xml_soap(url, xml_soap):
+    headers = {
+        'Content-type': 'text/xml; charset="UTF-8"',
+        'Content-length': str(len(xml_soap)),
+    }
+    try:
+        response = requests.post(url, data=xml_soap, headers=headers)
+        return response
+    except requests.exceptions.ConnectionError as e:
+        log.info("Error de conexión: %s", e)
+        return None
+    except requests.exceptions.Timeout as e:
+        log.info("Tiempo de espera agotado: %s", e)
+        return None
+    except requests.exceptions.RequestException as e:
+        log.info("Error de solicitud: %s", e)
+        return None
+    except Exception as e:
+        log.info("Error desconocido: %s", e)
+        return None
 
 
 class Cliente(object):
@@ -412,20 +482,7 @@ class ClienteCpe(object):
 
     def _connect(self):
         if self.tipo != 'guia':
-            if self._clientePython == 'pysimplesoap':
-                try:
-                    self._client = SoapClient(wsdl=self._url, cache=None, ns='tzmed', soap_ns='soapenv',
-                                              soap_server="jbossas6",
-                                              trace=True)  # SoapClient(location=self._location, action= self._soapaction, namespace=self._namespace)
-                    self._client['wsse:Security'] = {
-                        'wsse:UsernameToken': {
-                            'wsse:Username': self._username,
-                            'wsse:Password': self._password
-                        }
-                    }
-                except Exception:
-                    self._client = False
-            elif self._clientePython == 'zeep':
+            if self._clientePython in ['zeep', 'pysimplesoap']:
                 try:
                     settings = Settings(raw_response=True)
                     transport = Transport(operation_timeout=15, timeout=15)
@@ -445,6 +502,8 @@ class ClienteCpe(object):
                         self._client = client.service
                     except Exception as e:
                         self._client = False
+            elif self._clientePython in ['librecpe']:
+                self._client = 'librecpe'
             else:
                 self._client = False
 
@@ -466,15 +525,7 @@ class ClienteCpe(object):
                 return False, {}
         if not self._client:
             return False, {}
-        if self._clientePython == 'pysimplesoap':
-            try:
-                service = getattr(self._client, name)
-                return True, service(**params)
-            except SoapFault as ex:
-                return False, {'faultcode': ex.faultcode, 'faultstring': ex.faultstring}
-            except Exception as e:
-                return False, {}
-        elif self._clientePython == 'zeep':
+        if self._clientePython in ['zeep', 'pysimplesoap']:
             try:
                 service = getattr(self._client, name)
                 result = service(**params)
@@ -489,6 +540,20 @@ class ClienteCpe(object):
                     return False, response
             except Exception as e:
                 return False, {}
+        else:
+            try:
+                soap_xml = generar_xml_soap(self._username, self._password, name, **params)
+                result = enviar_xml_soap(self._url, soap_xml)
+                response = self._process_soap_response(result.content)
+                if response:
+                    if response.get('faultstring'):
+                        return False, response
+                    return True, response
+                else:
+                    return False, response
+            except Exception as e:
+                return False, {}
+
 
     def send_bill(self, filename, content_file, hash=None):
         if self.tipo == 'guia':
