@@ -302,14 +302,15 @@ class Cliente(object):
 
         return {'codigo': res_code, 'descripcion': res_desc, 'respuesta': response, 'nota': note, 'documento_desc': documento_desc}
 
-    def get_status(self, document_name, type, client, ticket=None):
+    def get_status(self, document_name, type, client, ticket=None, xml=None, xml_to_zip=False):
         # self._type="ticket"
+        self._xml = xml
         self._ticket = ticket
         self._type = type
         self._document_name = document_name
         self._client = client
         self.enviar()
-        self.procesarRespuesta()
+        self.procesarRespuesta(xml_to_zip)
         return self._zip_file, self._response_status, self._sunat_response, self._response_data
 
     def get_status_cdr(self, document_name, client):

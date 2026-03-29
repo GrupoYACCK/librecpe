@@ -335,14 +335,16 @@ class Documento:
         else:
             return {}
 
-    def obtenerEstadoDocumento(self, soap, nombre_documento, tipo, ticket = None):
+    def obtenerEstadoDocumento(self, soap, nombre_documento, tipo, ticket = None, xml=None, xml_to_zip=False):
         ruc = soap.get('ruc')
         servidor = Servidor()
         servidor.setServidor(soap)
         if servidor.servidor in ['sunat']:
             cliente_soap = ClienteCpe(ruc, servidor, tipo)
             cliente = Cliente()
-            zip, estado_respuesta, respuesta, datos_respuesta  = cliente.get_status(document_name=nombre_documento, type=tipo, client=cliente_soap, ticket=ticket)
+            if xml:
+                xml = decodebytes(xml)
+            zip, estado_respuesta, respuesta, datos_respuesta  = cliente.get_status(document_name=nombre_documento, type=tipo, client=cliente_soap, ticket=ticket, xml=xml, xml_to_zip=xml_to_zip)
             return {'estado': estado_respuesta, 'respuesta':respuesta, 'datos_respuesta': datos_respuesta}
         elif servidor.servidor in ['nubefact_pse']:
             nubefact = NubeFactPSE(self)
