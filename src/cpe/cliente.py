@@ -161,7 +161,7 @@ class Cliente(object):
         try:
             in_memory_data = BytesIO()
             in_memory_zip = zipfile.ZipFile(in_memory_data, "w", zipfile.ZIP_DEFLATED, False)
-            in_memory_zip.writestr(xml_name, xml)
+            in_memory_zip.writestr("%s.xml" % xml_name, xml)
             if r_zip:
                 r_name = 'R-%s.xml' % (xml_name)
                 r_xml = self._extraer_zip(r_zip, r_name)
