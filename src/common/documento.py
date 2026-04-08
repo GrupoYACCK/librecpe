@@ -319,21 +319,22 @@ class Documento:
     def enviarDocumento(self, servidor, nombre_documento=None, tipo=None, xml=None, xml_to_zip=False):
         servidor_obj = Servidor()
         servidor_obj.setServidor(servidor)
-        if servidor_obj.servidor in ['sunat']:
-            ruc = servidor.get('ruc')
-            cliente_soap = ClienteCpe(ruc, servidor_obj, tipo)
-            cliente = Cliente()
-            xml = decodebytes(xml)
-            zip, estado_respuesta, respuesta, datos_respuesta = cliente.procesar(document_name=nombre_documento, type=tipo, xml=xml, client=cliente_soap, xml_to_zip=xml_to_zip)
-            return {'estado': estado_respuesta, 'respuesta':respuesta, 'datos_respuesta': datos_respuesta}
-        elif servidor_obj.servidor in ['nubefact_pse']:
+        if servidor_obj.servidor in ['nubefact_pse']:
             nubefact = NubeFactPSE(self)
             if tipo == 'ra':
                 return nubefact.anularDocumento(servidor_obj)
             else:
                 return nubefact.enviarDocumento(servidor_obj)
         else:
-            return {}
+            ruc = servidor.get('ruc')
+            cliente_soap = ClienteCpe(ruc, servidor_obj, tipo)
+            cliente = Cliente()
+            xml = decodebytes(xml)
+            zip, estado_respuesta, respuesta, datos_respuesta = cliente.procesar(document_name=nombre_documento,
+                                                                                 type=tipo, xml=xml,
+                                                                                 client=cliente_soap,
+                                                                                 xml_to_zip=xml_to_zip)
+            return {'estado': estado_respuesta, 'respuesta': respuesta, 'datos_respuesta': datos_respuesta}
 
     def obtenerEstadoDocumento(self, soap, nombre_documento, tipo, ticket = None, xml=None, xml_to_zip=False):
         ruc = soap.get('ruc')
