@@ -791,6 +791,10 @@ class Ubl21:
         etree.SubElement(period, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.fechaTraslado
 
         if self.documento.modoTraslado == '01':
+            tag = etree.QName(self._cac, 'LoadingTransportEvent')
+            event = etree.SubElement(stage, tag.text, nsmap={'cac': tag.namespace})
+            tag = etree.QName(self._cbc, 'OccurrenceDate')
+            etree.SubElement(event, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.fechaTraslado
             for transportista in self.documento.transportistas:
                 tag = etree.QName(self._cac, 'CarrierParty')
                 customer = etree.SubElement(stage, tag.text, nsmap={'cac': tag.namespace})
