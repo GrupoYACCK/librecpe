@@ -13,7 +13,7 @@ PACKAGE_DIR = 'src'
 
 setup(
     name=PACKAGE_NAME,
-    version='3.1.2',
+    version='3.1.3',
     author='Alex Cuellar',
     author_email='acuellar@grupoyacck.com',
     maintainer='Alex Cuellar',
