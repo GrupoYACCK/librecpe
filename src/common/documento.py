@@ -68,6 +68,7 @@ class Documento:
 
         self.modoTraslado = ""
         self.fechaTraslado = ""
+        self.fechaInicioTraslado = ""
 
         self.transportistas = set()
 
@@ -223,6 +224,7 @@ class Documento:
             self.bultos = vals.get('bultos', 0.0)
             self.modoTraslado = vals.get('modoTraslado', "")
             self.fechaTraslado = vals.get('fechaTraslado', "")
+            self.fechaInicioTraslado = vals.get('fechaInicioTraslado', "")
 
             for transportista in vals.get('transportistas', []):
                 self.transportistas.add(Transportista(transportista))

@@ -811,7 +811,7 @@ class Ubl21:
             tag = etree.QName(self._cac, 'LoadingTransportEvent')
             event = etree.SubElement(stage, tag.text, nsmap={'cac': tag.namespace})
             tag = etree.QName(self._cbc, 'OccurrenceDate')
-            etree.SubElement(event, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.fechaTraslado
+            etree.SubElement(event, tag.text, nsmap={'cbc': tag.namespace}).text = self.documento.fechaInicioTraslado or self.documento.fechaTraslado
         else:
             tag = etree.QName(self._cac, 'TransportMeans')
             transport = etree.SubElement(stage, tag.text, nsmap={'cac': tag.namespace})
